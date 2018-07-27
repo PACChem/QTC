@@ -717,8 +717,8 @@ def db_head_path(db_location=None):
     if db_location == 'test':
         return '/home/elliott/testdirectory/'
     if db_location == None:
-        #return '/lcrc/project/PACC/databases/qtc_database/'
-        return '/lcrc/project/PACC/databases/torsscan_database/'
+        return '/lcrc/project/PACC/databases/qtc_database/'
+        #return '/lcrc/project/PACC/databases/torsscan_database/'
         #return '/home/elliott/testdirectory/'
     else:
         return fix_path(db_location)
