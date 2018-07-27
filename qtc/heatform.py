@@ -305,8 +305,8 @@ def nest_2_dic(bas,key1,key2=0):
     """
     Returns a dictionary value that requires two key values (is in singly nested loop )
     """
-    #from heatform_db import db
-    from newdb import db
+    from heatform_db import db
+    #from newdb import db
  
     dicfound = False
     bas = ob.get_slabel(bas)
