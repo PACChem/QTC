@@ -113,6 +113,8 @@ def add_species_info(s, parameters):
             x2z_out = run_x2z(xyzfile, parameters['x2z'])
             nrotor = get_x2z_nrotor(x2z_out)
             nmethyl = get_x2z_nmethyl(x2z_out)
+            x2zinfo = get_x2z_info(x2z_out)
+            parameters['moltype'] = x2zinfo['moltype']
             parameters['nallrotor']  = nrotor 
             parameters['nrotor']  = nrotor - nmethyl
             parameters['nmethyl'] = nmethyl
@@ -193,7 +195,11 @@ def get_input(x, template, parameters):
     geo = '\n'.join(xyz.splitlines()[2:natom+2]) 
     #zmat = ob.get_zmat(mol)
     x2zout = run_x2z(xyz, parameters['x2z'])
-    zmat =  get_x2z_zmat(x2zout)
+    if len(x2zout.splitlines()) > 6:
+        zmat =  get_x2z_zmat(x2zout)
+    else:
+        logging.debug(x2zout)
+        zmat = ob.get_zmat(mol)
     uniquename = ob.get_inchi_key(mol, mult)
     smilesname = ob.get_smiles_filename(mol)
     smiles = ob.get_smiles(mol)
@@ -265,7 +271,7 @@ def get_input(x, template, parameters):
             elif task == 'optfreq':
                 task = 'opt=(maxcyc=50,internal) freq'
             elif task == 'optanharm':
-                task = 'opt=(maxcyc=50,internal) freq=(anharm,vibrot)'
+                task = 'opt=(maxcyc=50,internal) freq=(anharm,vibrot,readanharm)'
             elif task == 'freq':
                 task = 'freq'
             elif task == 'energy':
@@ -628,7 +634,6 @@ def get_xyz(out,package=None):
     elif package == 'qchem':
         xyz = pa.qchem_xyz(out)
     return xyz
-    return xyz
         
         
 def parse_output(s, formula, write=False):
@@ -817,6 +822,82 @@ def parse_output(s, formula, write=False):
                'deltaH298': hof298}
 
     return d
+
+
+def get_output_data(out, package=None):
+    """
+    Parse the output text "out" and return a dictionary
+    with parsed results that can be exported as a json file.
+    """
+    data = {}
+    data['warnings'] = ['']
+    if package is None:
+        package = get_output_package(out)
+    if package == 'nwchem':
+        lines = out.splitlines()
+        data['method'] = get_nwchem_method(out)
+        data['calculation'] = get_nwchem_calculation(out)
+        data['xyz'] = get_nwchem_xyz(lines)
+        data['numberOfBasisFunctions'] = get_nwchem_nbasis(out)
+        energies = get_nwchem_energies(lines)
+        data['energy_hartree'] = energies[data['method']]
+        freqs = get_nwchem_frequencies(lines)
+        if len(freqs) > 0:
+            data['harmonicFrequencies_cm-1'] = freqs
+            data['zpve'] = get_zpve(data['harmonicFrequencies_cm-1'])
+            if any(freq < 0 for freq in freqs) < 0:
+                data['warnings'].append('Imaginary frequency dedected')
+        if data['energy_hartree']:
+            data['succesful'] = True
+        else:
+            data['succesful'] = False
+    elif package == 'molpro':
+        method, data['energy_hartree'] = pa.molpro_energy(out)
+        data['method'] = method.replace('\(','(').replace('\)',')')  #will figureout source of this later
+        data['zpve']   = pa.molpro_zpve(out)
+        data['xyz']    = pa.molpro_xyz(out)
+        data['calculation'] = pa.molpro_calc(out)
+        data['basis']  = pa.molpro_basisset(out)
+        data['zmat']   = pa.molpro_zmat(out)
+        data['hessian'] = pa.molpro_hessian(out)
+        data['harmonicFrequencies_cm-1'] = list(pa.molpro_freqs(out))
+        if data['energy_hartree']:
+            data['succesful'] = True
+        else:
+            data['succesful'] = False
+    elif package == 'gaussian':
+        data['method'], data['energy_hartree'] = pa.gaussian_energy(s)
+        data['zpve']           = pa.gaussian_zpve(s)
+        data['azpve']          = pa.gaussian_anzpve(s)
+        data['calculation'] = pa.gaussian_calc(s)
+        data['basis']  = pa.gaussian_basisset(s)
+        data['zmat']   = pa.gaussian_zmat(s)
+        data['xyz']     = pa.gaussian_xyz(s)
+        hessian        = pa.gaussian_hessian(s)
+        freqs          = list(pa.gaussian_freqs(s))
+        afreqs         = list(get_gaussian_fundamentals(s)[:,1])
+        if sum(afreqs) > 0:
+            xmat           = get_gaussian_xmatrix(s, get_gaussian_nfreq(s))
+            if type(xmat) == str:
+                xmat = []
+        else:
+            afreqs = []
+        if energy:
+            parsed = True
+    elif package == 'mopac':
+        data['method'] = 'SEMO'
+        energy = get_mopac_energy(s)
+        deltaH0 = get_mopac_deltaH0(s)
+        deltaH298 = get_mopac_deltaH298(s)
+        xyz = get_mopac_xyz(s)
+        freqs = get_mopac_freq(s)
+        zpve = get_mopac_zpe(s)
+        if energy:
+            parsed = True
+    else:
+        data['']
+    return data
+
 
 
 def get_zpve(freqs):
@@ -1132,6 +1213,11 @@ def run(s, parameters, mult=None, trial=0):
                 parameters['qcexe'] = '{0}'.format(parameters['qchem'])
             elif package.startswith('mopac'):
                 parameters['qcexe'] = parameters['mopac']
+                mopacdir = io.get_path(parameters['mopac'],directory=True)
+                io.set_env_var('MOPAC_LICENSE',mopacdir)
+                ldpath= io.get_env('LD_LIBRARY_PATH')
+                ldpath = mopacdir + ':' + ldpath
+                io.set_env_var('LD_LIBRARY_PATH',ldpath)
             elif task.startswith('tors') or task.startswith('md'):
                 parameters['qcexe'] = parameters['torsscan']
             else:
@@ -1164,6 +1250,11 @@ def run(s, parameters, mult=None, trial=0):
                 command = parameters['qcexe'] + ' ' + inpfile + ' ' + outfile
                 logging.info('Running quantum chemistry calculation with {}'.format(command))
                 msg += io.execute(command)
+            outfile2 = inpfile + '.out'
+            ### MOPAC may create *.inp.out file depending on the version
+            if io.check_file(outfile2, timeout=1):
+                io.mv(outfile2,outfile)
+            ### 
             if io.check_file(outfile, timeout=1):
                 msg += ' Output file: "{0}"\n'.format(io.get_path(outfile))
                 out = io.read_file(outfile)
@@ -1257,6 +1348,7 @@ def run_x2z(xyz,exe='x2z', getinfo=False, outputfile=None):
     Runs Yury's x2z, and returns the output text as a string (default) or 
     if getinfo is True returns a dictionary with parsed information.
     """
+    result = ''
     if io.check_file(xyz):
         inp = xyz
     else:
@@ -1267,6 +1359,17 @@ def run_x2z(xyz,exe='x2z', getinfo=False, outputfile=None):
     if err:
         logging.info('STDOUT for x2z:\n {}'.format(out))
         logging.error('STDERR for x2z:\n {}'.format(err))
+        try:
+            if getinfo:
+                x2zinfo = get_x2z_info(out)
+                result = x2zinfo
+            else:
+                result = out
+            if outputfile:
+                io.write_file(out, outputfile)
+            return result
+        except:
+            return ''
     else:
         if getinfo:
             x2zinfo = get_x2z_info(out)
@@ -1398,32 +1501,33 @@ def get_x2z_zmat(out):
     zmat = ''
     atoms = []
     measure = []
-    props, lines = out.split('Z-Matrix:\n')
-    #zmatrix connectivity
-    lines = lines.split('\n')
-    for i,line in enumerate(lines):
-        if line == '':
-            break
-        atoms.append('  '.join(line.rstrip('\n').replace(' ','').split(',')))     #Main part of ZMAT
-    zmat += '\n'.join(atoms)
-    #zmatrix parameters
-    for j in range(i+1,len(lines)):
-        if lines[j]:
-            if 'const' in lines[j].lower() or 'Rot' in lines[j] or 'Beta' in lines[j]:
+    if out:
+        props, lines = out.lower().split('z-matrix:\n')
+        #zmatrix connectivity
+        lines = lines.split('\n')
+        for i,line in enumerate(lines):
+            if line == '':
                 break
-        measure.extend(lines[j].replace('=',' ').rstrip('\n').split())   #Gets parameters
-    measure = np.array(measure)                     
-    if  (len(measure)%2 != 0):
-        measure = measure[:-1]
-    measure = measure.reshape( len(measure)/2, 2)      #Puts measurements into two columns
-    for angle in measure:
-        if 'R' in angle[0]:
-            angle[1] = str(float(angle[1]) * 0.529177) #bohr to angstrom 
-        angle[1] = '{:.4f}'.format(float(angle[1]))
-    measure = measure.tolist()
-    for i, meas in enumerate(measure): 
-        measure[i] = ' = '.join(measure[i])    
-    zmat += '\nVariables:\n' + '\n'.join(measure) 
+            atoms.append('  '.join(line.rstrip('\n').replace(' ','').split(',')))     #Main part of ZMAT
+        zmat += '\n'.join(atoms)
+        #zmatrix parameters
+        for j in range(i+1,len(lines)):
+            if lines[j]:
+                if 'const' in lines[j].lower() or 'rot' in lines[j] or 'beta' in lines[j]:
+                    break
+            measure.extend(lines[j].replace('=',' ').rstrip('\n').split())   #Gets parameters
+        measure = np.array(measure)                     
+        if  (len(measure)%2 != 0):
+            measure = measure[:-1]
+        measure = measure.reshape( len(measure)/2, 2)      #Puts measurements into two columns
+        for angle in measure:
+            if 'r' in angle[0].lower():
+                angle[1] = str(float(angle[1]) * 0.529177) #bohr to angstrom 
+            angle[1] = '{:.4f}'.format(float(angle[1]))
+        measure = measure.tolist()
+        for i, meas in enumerate(measure): 
+            measure[i] = ' = '.join(measure[i])    
+        zmat += '\nVariables:\n' + '\n'.join(measure) 
     return zmat
 
 def get_x2z_bonds(out):
@@ -1452,7 +1556,7 @@ def get_x2z_bonds(out):
         if line == '':
             break
         for j, typ in enumerate(line.split()[1:-1]):
-            if int(typ) > 0:
+            if float(typ) > 0.0:
                 bonded = sorted([atoms[i], atoms[j]])
                 bond = '{0}-{2}({1})'.format(bonded[0],typ,bonded[1])
                 if bond in bonds:
@@ -1520,6 +1624,7 @@ def get_x2z_info(out):
     x2zinfo['nsym'] = -1
     x2zinfo['nrotor'] = 0
     x2zinfo['nresonance'] = 0
+    x2zinfo['bonds'] = get_x2z_bonds(out)
     x2zinfo['zmat'] = get_x2z_zmat(out)
     x2zinfo['nmethyl'] = get_x2z_nmethyl(out)
     x2zinfo['bonds'] = get_x2z_bonds(out)
@@ -1552,26 +1657,6 @@ def get_x2z_info(out):
                     x2zinfo['nresonance'] = int(item)
     return x2zinfo                
 
-
-def get_bac(parameters, bonds):
-    """
-    Given a set of bonds, calculate the bond additivity correction
-    using a  template specified in parameters
-    """
-    bacfile = parameters['qctemplate'] +'/bac.txt'
-    bacfile = io.read_file(bacfile).splitlines()
-    bacdic  = {}
-    for line in bacfile:
-        line = line.split()
-        if len(line) > 1:
-            bacdic[line[0]] = float(line[1])
-    correction = 0.
-    for key in bonds:
-        if key in bacdic:
-            correction += bonds[key] * bacdic[key] 
-        else:
-            print '{} bond has no correction'.format(key)
-    return correction
 
 def get_ob_info(s):
     """
@@ -1668,21 +1753,84 @@ def get_output_package(out,filename=False):
     """
     if filename:
         out = io.read_file(out,aslines=False)
+    if "Gaussian(R)" in out:
+        p = 'gaussian'
     if "Normal termination of Gaussian" in out:
         p = 'gaussian'
     elif "== MOPAC DONE ==" in out:
         p = 'mopac'
-    elif "Straatsma" in out:
-        p = 'nwchem'
-    elif "Variable memory released" in out:
-        p = 'molpro'
+    elif "Northwest Computational Chemistry Package" in out:
+        if "Straatsma" in out:
+            p = 'nwchem'
+        else:
+            p = 'failed_nwchem'
+    elif "PROGRAM SYSTEM MOLPRO" in out:
+        if "Variable memory released" in out:
+            p = 'molpro'
+        else:
+            p = 'failed_molpro'
     elif "Task: Submitting EStokTP job" in out:
         p = 'torsscan'
+    elif "Beta-scission bonds:" in out:
+        p = 'x2z'
+    elif "thermo properties for species" in out:
+        p = 'thermp'
     elif "Thank you very much for using Q-Chem" in out:
         p = 'qchem'
     else:
         p = None
     return p
+
+
+def get_output_status(out,filename=False):
+    """
+    Returns the name of qc package if the calculation is successful.
+    Returns None if failed or unknown package.
+    """
+    p = 'NA'
+    s = 'NA'
+    m = ''
+    nchar = 512
+    if filename:
+        out = io.read_file(out,aslines=False)
+    if "Gaussian(R)" in out:
+        p = 'gaussian'
+        if "Normal termination of Gaussian" in out:
+            s = 'OK'
+        else:
+            s = 'FAILED'
+            m = out[-nchar:-1]
+    elif "MOPAC" in out:
+        p = 'mopac'
+        if "== MOPAC DONE ==" in out:
+            s = 'OK'
+        else:
+            s = 'FAILED'
+            m = out[-nchar:-1]
+    elif "Northwest Computational Chemistry Package" in out:
+        p = 'nwchem'
+        if "Straatsma" in out:
+            s = 'OK'
+        else:
+            s = 'FAILED'
+            m = out[-nchar:-1]
+    elif "PROGRAM SYSTEM MOLPRO" in out:
+        p = 'molpro'
+        if "Variable memory released" in out:
+            s = 'OK'
+        else:
+            s = 'FAILED'
+            m = out[-nchar:-1]
+    elif "Task: Submitting EStokTP job" in out:
+        p = 'torsscan'
+    elif "Beta-scission bonds:" in out:
+        p = 'x2z'
+    elif "thermo properties for species" in out:
+        p = 'thermp'
+    else:
+        p = None
+    return p, s, m
+
 
 
 def get_package(templatename):
