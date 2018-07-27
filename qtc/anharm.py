@@ -101,7 +101,7 @@ def remove_modes(xmat,modes):
     """
     modes.sort()#reverse=True)
     modeindex = [mode-1 for mode in modes]
-    for index in modeindex:
+    for index in modeindex[::-1]:
         xmat = np.delete(xmat,index,0)
         xmat = np.delete(xmat,index,1)
     return xmat
@@ -273,8 +273,6 @@ def main(args, vibrots = None):
                     xmat[i] = xmat[i].split(',')
             elif io.check_file(anharmlog):
                 xmat = qc.get_gaussian_xmatrix(io.read_file(anharmlog),len(unproj))
-
-        modes     = find_hinfreqs(proj,unproj,b)
         if type(xmat) == list:
             for i in range(len(xmat)):
                 xmat[i][i] = float(xmat[i][i])
@@ -286,7 +284,10 @@ def main(args, vibrots = None):
         else:
             xmat = []
             anfreq = proj
+        modes     = find_hinfreqs(proj,unproj,b)
+        xmat      = remove_modes(xmat,modes)
         #proj, b   = get_freqs(eskproj)
+        anfreq = anharm_freq(proj,xmat)
         if vibrots:
             vibrots = remove_vibrots(vibrots, modes)
         return anfreq, mess_fr(anfreq),  xmat, mess_x(xmat), extra, vibrots
@@ -311,7 +312,7 @@ def main(args, vibrots = None):
             xmat      = remove_modes(xmat,modes)
             proj, b   = get_freqs(eskproj)
             anfreq = anharm_freq(proj,xmat)
-            return anfreq, mess_fr(anfreq), xmat, mess_x(xmat), extra
+            return anfreq, mess_fr(anfreq), xmat, mess_x(xmat), extra, vibrots
     return 
 
 if __name__ == '__main__':
