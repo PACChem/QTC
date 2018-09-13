@@ -314,7 +314,7 @@ def run(s):
             runqc = False
             parseqc = False
             runthermo = False
-            if 'opt' in task:
+            if 'opt' in task or 'tors' in task:
                 parameters['break'] = True
             logging.warning('Skipping calculation since it is already running. Use -O {1}.{2} to overwrite or delete "{0}" file'.format(io.get_path(runfile),parameters['mol_index'],calcindex))
     elif ignore and task is not 'composite':
@@ -436,16 +436,19 @@ def run(s):
             if 'Hessian' in parameters['results'] and 'RPHt input' in parameters['results']:
                 RPHtexe = '/lcrc/project/PACC/codes/EStokTP/exe/RPHt.exe'
                 if not task.startswith('tors') and not task.startswith('md'):
-                    RPHt, geolines = parameters['results']['RPHt input'].split('geometry')
-                    geolines, gradlines = geolines.split('gradient')
-                    xyz = io.read_file(formula + '_initial.xyz').splitlines()[2:]
-                    RPHt += 'geometry\n'
-                    for i, line in enumerate( geolines.splitlines()[1:]):
-                        RPHt += '\t' + '\t'.join(line.split()[0:])+ '\n'
-                        #RPHt += '\t' + '\t'.join(line.split()[0:3]) + '\t' + '\t'.join(xyz[i].split()[1:]) + '\n'
-                    RPHt += 'gradient' +  gradlines.split('Hessian')[0] + 'Hessian\n' + parameters['results']['Hessian']
-                    parameters['results']['RPHt input'] = RPHt
-                    RPHtfile = 'RPHt_input_data.dat'
+                    try:
+                        RPHt, geolines = parameters['results']['RPHt input'].split('geometry')
+                        geolines, gradlines = geolines.split('gradient')[:2]
+                        xyz = io.read_file(formula + '_initial.xyz').splitlines()[2:]
+                        RPHt += 'geometry\n'
+                        for i, line in enumerate( geolines.splitlines()[1:]):
+                            RPHt += '\t' + '\t'.join(line.split()[0:])+ '\n'
+                            #RPHt += '\t' + '\t'.join(line.split()[0:3]) + '\t' + '\t'.join(xyz[i].split()[1:]) + '\n'
+                        RPHt += 'gradient' +  gradlines.split('Hessian')[0] + 'Hessian\n' + parameters['results']['Hessian']
+                        parameters['results']['RPHt input'] = RPHt
+                        RPHtfile = 'RPHt_input_data.dat'
+                    except:
+                        logging.error('RPHT data is erroneous:\n{}'.format(parameters['results']['RPHt input']))
                 if io.check_file(RPHtexe):
                     if not task.startswith('tors') and not task.startswith('md'):
                         io.write_file(RPHt,RPHtfile)
@@ -513,7 +516,7 @@ def run(s):
                     floatfreqs = sorted([float(freq) for freq in results[key]])
                     parameters['freqdir'] = parameters['qcdirectory']
                     logging.info('{:10s} = {}'.format(key,['{:6.1f}'.format(freq) for freq in floatfreqs]))
-                    if any(freq < 0 for freq in floatfreqs) and runthermo:
+                    if any(freq < 0 for freq in floatfreqs) and runthermo and not 'pfreqs' in results.keys():
                         runthermo = False
                         logging.error('Cannot run thermo')
                 if 'pfreqs' in key:
@@ -858,13 +861,14 @@ def main(arg_update={}):
             parameters['anharmdir'] = ''
             parameters['qcdirectory'] = ''
             parameters['optlevel'] = ''
+            parameters['xyz'] = ''
             parameters['freqlevel'] = ''
             parameters['mol_index'] = mid + 1
             parameters['break'] = False
             parameters['results'] = {}
             parameters['all results'].update({qc.get_slabel(s):{}}) 
-            parameters = qc.add_species_info(s,parameters)
             for i in range(ncalc):
+                parameters = qc.add_species_info(s,parameters)
                 if parameters['break']:
                     logging.info('Skipping next calculations for {}'.format(s))
                     break
@@ -885,6 +889,7 @@ def main(arg_update={}):
                 parameters['anharmdir'] = ''
                 parameters['qcdirectory'] = ''
                 parameters['optlevel'] = ''
+                parameters['xyz'] = ''
                 parameters['freqlevel'] = ''
                 parameters['mol_index'] = mid + 1
                 parameters['break'] = False
