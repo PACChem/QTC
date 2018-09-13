@@ -191,6 +191,7 @@ def gaussian_freqs(lines):
 def gaussian_hessian(lines):
     startkey = 'Force constants in Cartesian coordinates:'
     endkey   = 'Force constants in internal coordinates:'
+    key2 = 'Leave Link'
     lines= lines.split('Harmonic vibro-rotational analysis')[-1]
     lines = lines.splitlines()
     sline = io.get_line_number(startkey,lines=lines)
@@ -198,6 +199,7 @@ def gaussian_hessian(lines):
     if sline < 0:
         return ''
     hess   = '\n'.join(lines[sline+1:eline]).replace('D','E')
+    hess   = hess.split(key2)[0]
     return hess
 
 def gaussian_zpve(lines):
@@ -389,7 +391,7 @@ def molpro_energy(lines,method=''):
         return (method.rstrip('[a,b]?'),float(energ[-1].replace('\n','').replace(' ','')))
     if len(energ) == 0:
         print 'energy not found'
-    return 0 
+    return '', 0 
    
 def  molpro_freqs(lines):
 
