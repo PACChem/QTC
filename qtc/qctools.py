@@ -2,6 +2,7 @@
 """
 Quantum chemistry tools.
 """
+import sys
 import obtools as ob
 import iotools as io
 import numpy as np
@@ -91,7 +92,10 @@ def add_species_info(s, parameters):
     s = get_slabel(s)
     xyzfile = ob.get_smiles_filename(s) + '.xyz'
     xyzfile = io.fix_path(xyzfile)
-    if io.check_file(xyzfile):
+    if parameters['xyz']:
+        xyz = parameters['xyz']
+        mol = ob.get_mol(xyz)
+    elif io.check_file(xyzfile):
         xyz = io.read_file(xyzfile)
         mol = ob.get_mol(xyz)
     else:
@@ -479,7 +483,7 @@ def parse_qckeyword(parameters, calcindex=0):
             logging.info('Replacing Task = {} with Task = energy, since there is only a single atom'.format(task))
             task = 'energy'
             parameters['task'] = task
-    elif parameters['nallrotor'] == 0:
+    elif parameters['nallrotor'] < 1:
         if task.startswith('torsopt'):
             logging.info('Replacing Task = {} with Task = opt, since there are no torsions.'.format(task))
             task = 'opt'
@@ -1159,6 +1163,8 @@ def run(s, parameters, mult=None, trial=0):
     if task.startswith('tors'):
         package = 'torsscan'
         templatename = task + '_template' + '.txt'
+        if trial > 0:
+            templatename = '{0}_{1}_template.txt'.format(task,trial)
         templatefile = io.join_path(*[tempdir,templatename])
     elif task.startswith('md'):
         package = 'torsscan'
@@ -1197,6 +1203,7 @@ def run(s, parameters, mult=None, trial=0):
             shutil.rmtree(pwd)
             shutil.copytree(ddir, pwd)
             io.cd(pwd)
+            io.write_file('\n','RUNNING.tmp')
         inpfile = io.join_path(*[pwd, inpfile])
         io.write_file(inptext, inpfile)
         if package in ['nwchem', 'molpro', 'mopac', 'gaussian', 'torsscan','torsopt','qchem','md' ]:
@@ -1223,7 +1230,22 @@ def run(s, parameters, mult=None, trial=0):
             else:
                 parameters['qcexe'] = parameters[package]
         if io.check_file(inpfile, timeout=1):
-            if package in  ['nwchem', 'torsscan','torsopt', 'md']:
+            if package in ['torsscan','torsopt', 'md']:
+                configfile = parameters['qcexe'].replace('torsional_scan.py','configfile.txt')
+                command = parameters['qcexe'] + ' -i' + inpfile + ' -o ' + outfile + ' -c' + configfile
+                logging.info('Running quantum chemistry calculation with {}'.format(command))
+                msg += io.execute(command,stdoutfile='stdouterr.txt',merge=True)
+               # if not parameters['qcexe'] in sys.path:
+               #    sys.path.insert(0,parameters['qcexe'])
+               # logging.info(sys.path)
+               # import torsional_scan
+               # print outfile
+               # if 'torsconfigfile' in parameters:
+               #     configfile = paramters['torsconfigfile']
+               # command = 'torsional_scan.main(' + inpfile + ',' + outfile + ',' + parameters['qcexe'] + configfile + ')'
+               # logging.info('Running quantum chemistry calculation with {}'.format(command))
+               # torsional_scan.main(inpfile,outfile,configfile)
+            if package in  ['nwchem']:
                 command = parameters['qcexe'] + ' ' + inpfile
                 if package == 'nwchem':
                     io.mkdir('tmp_nwchem')
@@ -1770,6 +1792,8 @@ def get_output_package(out,filename=False):
         else:
             p = 'failed_molpro'
     elif "Task: Submitting EStokTP job" in out:
+        p = 'torsscan'
+    elif "Status: Submitting EStokTP job" in out:
         p = 'torsscan'
     elif "Beta-scission bonds:" in out:
         p = 'x2z'
