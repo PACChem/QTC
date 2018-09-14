@@ -301,12 +301,26 @@ def getname_fromdirname():
     cwd = os.getcwd()
     return cwd.split('/')[-1]
 
+def nest_1_dic(bas,key1):
+    from newdb import db
+ 
+    dicfound = False
+    bas = ob.get_slabel(bas)
+    val = ''
+    for dic in db:
+        if dic['_id'] == bas:
+            dicfound = True
+            break
+    if dicfound:
+        val = dic[key1]
+    return val
+
 def nest_2_dic(bas,key1,key2=0):
     """
     Returns a dictionary value that requires two key values (is in singly nested loop )
     """
-    from heatform_db import db
-    #from newdb import db
+    #from heatform_db import db
+    from newdb import db
  
     dicfound = False
     bas = ob.get_slabel(bas)

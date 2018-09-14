@@ -1963,6 +1963,7 @@ def get_smiles_filename(x):
     s = s.replace('(','_p_')
     s = s.replace(')','_q_')
     s = s.replace('*','_s_')
+    s = s.replace('$','_S_')
     s = s.replace('#','_t_')
     s = s.replace('<','_v_')
     s = s.replace('>','_y_')

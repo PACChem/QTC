@@ -204,7 +204,6 @@ def anharm_freq(freqs,xmat):
         for j in range(len(freqs)):
             if j != i:
                 tmp += xmat[i][j]
-
         anharms[i] += 1./2 * tmp
 
     return anharms
@@ -273,6 +272,7 @@ def main(args, vibrots = None):
                     xmat[i] = xmat[i].split(',')
             elif io.check_file(anharmlog):
                 xmat = qc.get_gaussian_xmatrix(io.read_file(anharmlog),len(unproj))
+        modes     = find_hinfreqs(proj,unproj,b)
         if type(xmat) == list:
             for i in range(len(xmat)):
                 xmat[i][i] = float(xmat[i][i])
@@ -284,8 +284,7 @@ def main(args, vibrots = None):
         else:
             xmat = []
             anfreq = proj
-        modes     = find_hinfreqs(proj,unproj,b)
-        xmat      = remove_modes(xmat,modes)
+            xmat      = remove_modes(xmat,modes)
         #proj, b   = get_freqs(eskproj)
         anfreq = anharm_freq(proj,xmat)
         if vibrots:
