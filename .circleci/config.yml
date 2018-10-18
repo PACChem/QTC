@@ -1,0 +1,26 @@
+version: 2
+jobs:
+    build-ubuntu:
+        docker:
+            - image: circleci/buildpack-deps:18.04
+        steps:
+            - checkout
+            - run: 
+                name: Create conda environment
+                command: |
+                    echo 'export CONDA=$HOME/miniconda' >> $BASH_ENV
+                    echo 'export PATH=$CONDA/bin:$PATH' >> $BASH_ENV
+                    source $BASH_ENV
+                    bash install/conda.sh  # install conda
+                    conda env create -f environment.yml  # create the qtc-env environment
+            - run:
+                name: Install QTC and run tests
+                command: |
+                    source activate qtc-env
+                    pip install .  # uses the setup.py file
+                    pytest -v tests/  # finds and runs tests
+workflows:
+    version: 2
+    build-all:
+        jobs:
+            - build-ubuntu
