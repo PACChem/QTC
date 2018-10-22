@@ -10,4 +10,5 @@ dependencies:
   - psutil
   - openbabel
   - cirpy
+  - pytest
 
