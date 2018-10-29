@@ -2,7 +2,6 @@ import os
 import sys
 import numpy as np
 
-sys.path.insert(0, '/home/elliott/Packages/QTC/')
 import iotools as io
 import qctools as qc
 import logging
@@ -56,10 +55,14 @@ def get_freqs(filename):
     full = full.split()
     nfreqs = full[0]
     freqs = full[1:]
+    if 'ts' in filename:
+        imaginary = io.read_file(filename)
+        imaginary=imaginary.split('ImaginaryFrequency[1/cm]')[1].split()[0]
+        freqs.insert(0,'-' + imaginary)
     #[freq=float(freq) for freq in freqs]
     freqs = np.array(map(float, freqs))
-    a= freqs.argsort()[::-1]
-    freqs = np.sort(freqs)[::-1]
+    a= freqs.argsort()
+    freqs = np.sort(freqs)
     return freqs.tolist(), a.tolist()
 
 
@@ -95,7 +98,7 @@ def remove_modes(xmat,modes):
     Removes specified modes from anharmonic constant matrix
     INPUTS:
     xmat  - anharmonic constant matrix
-    modes - the modes to delete from the matrix (with 1 being the first mode)
+    m?odes - the modes to delete from the matrix (with 1 being the first mode)
     OUTPUTS:
     xmat  - anharmonic constant matrix with columns and rows deleted for specified modes
     """
@@ -140,20 +143,27 @@ def gauss_anharm_inp(filename,anlevel):
     zmat = ' ' + zmat.lstrip()
     zmat += full[0].split('-------------------------------------------')[3].replace('-','').replace('-','').replace('-','').replace('\n ','')
     if not anlevel == 'ignore':
-        zmat =  zmat.split('#')[0] + ' # ' + anlevel + ' opt = internal ' + zmat.split('#')[2]
-    zmat += '# scf=verytight nosym Freq=Anharmonic Freq=Vibrot\n'
-    zmat += '\nAnharmonic computation\n'
+        if 'ts' in filename:
+            zmat =  zmat.split('#')[0] + ' # ' + anlevel + ' opt=(ts,calcfc,noeig,internal,maxcyc=50)' + zmat.split('#')[2]
+        else:
+            zmat =  zmat.split('#')[0] + ' # ' + anlevel + ' opt=(internal)' + zmat.split('#')[2]
+    zmat = zmat.replace('freq','freq=(anharm,vibrot,readanharm)')
+    zmat += '\n\nAnharmonic computation\n'
     zmat += full[1].split('       Variables:')[0]
     zmat += 'Variables:\n'
     zmat = zmat.replace('Charge = ','')
     zmat = zmat.replace('Multiplicity =','')
-    varis = full[1].split('Optimized Parameters')[1].split('--------------------------------------')[1]
-    varis = varis.split('\n')
+    try:
+       varis = full[1].split('Optimized Parameters')[1].split('--------------------------------------')[1]
+       varis = varis.split('\n')
+    except:
+       varis = [0,0]
     del varis[0]
     del varis[-1]
     for var in varis:
         var = var.split()
         zmat += ' '+  var[1] + '\t' + var[2] + '\n'
+    zmat += '\nPrint=NMOrder=AscNoIrrep\n\n'
     return zmat
 
 def write_anharm_inp(readfile='reac1_l1.log',writefile='anharm.inp',anlevel='ignore'):
@@ -176,7 +186,7 @@ def run_gauss(filename,node):
     node     - node to run it on
     """
     if io.check_file(filename):
-        executea = 'soft add +gcc-5.3; soft add +g09; g09 ' + filename 
+        executea = 'soft add +gcc-5.3; soft add +g09-e.01; g09 ' + filename 
         executeb = 'cd `pwd`; export PATH=$PATH:~/bin; '
         ssh ='/usr/bin/ssh'
         host =node
@@ -208,21 +218,28 @@ def anharm_freq(freqs,xmat):
 
     return anharms
 
-def mess_x(xmat):
+def mess_x(xmat, anfreq=[]):
     inp = ''
+    removefirst = 0
+    if len(anfreq)>0:
+       if anfreq[0] < 0:
+           removefirst = 1
     if len(xmat) > 0:
         inp = ' Anharmonicities[1/cm]\n'
-        for i in range( len(xmat)):
+        for i in range( len(xmat)-removefirst):
             for j in range(i+1):
-                 inp += '   {:.3f}'.format(xmat[i][j])
+                 inp += '   {:.3f}'.format(xmat[i+removefirst][j+removefirst])
             inp += '\n'
         inp += ' End\n'
     return inp
 
 def mess_fr(freqs):
 
-    inp = '    Frequencies[1/cm]           ' + str(len(freqs)) + '\n     '
-    for i, freq in enumerate(freqs):
+    n = 0
+    if freqs[0] < 0:
+        n = 1
+    inp = '    Frequencies[1/cm]           ' + str(len(freqs)-n) + '\n     '
+    for i, freq in enumerate(freqs[n:]):
        inp += '%4.1f\t'%freq
        if (i+1)%10 == 0:
            inp += '\n     '
@@ -231,7 +248,8 @@ def mess_fr(freqs):
 
 def main(args, vibrots = None):
     
-    extra = ' ZeroEnergy[kcal/mol]\t 0.\n ElectronicLevels[1/cm]\t\t1\n  0.0000000000000000\t\t1.0000000000000000\nEnd' 
+    extra = ' ZeroEnergy[kcal/mol]\t 0.\n ElectronicLevels[1/cm]\t\t1\n  0.0000000000000000\t\t1.0000000000000000\nEnd'
+    getextra = False
     if isinstance(args, dict):
         #natoms    = args['natoms']
         if 'writegauss' in args:
@@ -256,6 +274,9 @@ def main(args, vibrots = None):
         else:
             proj, b   = get_freqs(args['freqfile'])
             unproj, a = get_freqs(args['unprojfreq'])
+            if 'ts' in args['freqfile']:
+                getextra = True
+
         #xmat = gauss_xmat(anharmlog,natoms)
         if 'xmat' in args:
             xmat = args['xmat']
@@ -264,8 +285,11 @@ def main(args, vibrots = None):
             anlevel   = args['theory' ]
             optlevel  = args['optlevel']
             anharmlog = args['anharmlog' ] + '.log'
-            andire = io.db_sp_path(anlevel.split('/')[0], anlevel.split('/')[1], anlevel.split('/')[2], None, smiles,
-                  optlevel[0], optlevel[1], optlevel[2])
+            try:
+                andire = io.db_sp_path(anlevel.split('/')[0], anlevel.split('/')[1], anlevel.split('/')[2], None, smiles,
+                      optlevel[0], optlevel[1], optlevel[2])
+            except:
+                andire = ''
             if io.check_file(andire + '/' + smiles + '.xmat'):
                 xmat = io.db_get_sp_prop(smiles, 'xmat', andire).split('\n')
                 for i in range(len(xmat)):
@@ -284,12 +308,12 @@ def main(args, vibrots = None):
         else:
             xmat = []
             anfreq = proj
-            xmat      = remove_modes(xmat,modes)
         #proj, b   = get_freqs(eskproj)
-        anfreq = anharm_freq(proj,xmat)
         if vibrots:
             vibrots = remove_vibrots(vibrots, modes)
-        return anfreq, mess_fr(anfreq),  xmat, mess_x(xmat), extra, vibrots
+            if getextra:
+                extra +=   '\t\tTunneling    Eckart\n\tImaginaryFrequency[1/cm]\t{}\n\tWellDepth[kcal/mol]\t$wdepfor\n\tWellDepth[kcal/mol]\t$wdepback\nEnd'.format(abs(anfreq[0]))
+        return anfreq, mess_fr(anfreq),  xmat, mess_x(xmat,anfreq), extra, vibrots
     ##########################
     else: 
         anharmlog = args.anharmlog
@@ -311,7 +335,9 @@ def main(args, vibrots = None):
             xmat      = remove_modes(xmat,modes)
             proj, b   = get_freqs(eskproj)
             anfreq = anharm_freq(proj,xmat)
-            return anfreq, mess_fr(anfreq), xmat, mess_x(xmat), extra, vibrots
+            if getextra:
+                extra +=   '\t\tTunneling    Eckart\n\tImaginaryFrequency[1/cm]\t{}\n\tWellDepth[kcal/mol]\t$wdepfor\n\tWellDepth[kcal/mol]\t$wdepback\nEnd'.format(abs(anfreq[0]))
+            return anfreq, mess_fr(anfreq), xmat, mess_x(xmat,anfreq), extra, vibrots
     return 
 
 if __name__ == '__main__':
