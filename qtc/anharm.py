@@ -52,6 +52,8 @@ def get_freqs(filename):
     full = io.read_file(filename)
     full = full.strip('\n')
     full = full.split('[1/cm]')[1].split('Zero')[0] 
+    full = full.split('ElectronicLevels')[0] 
+    full = full.split('End')[0] 
     full = full.split()
     nfreqs = full[0]
     freqs = full[1:]
