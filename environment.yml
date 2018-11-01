@@ -3,6 +3,7 @@ name: qtc-env
 channels:
   - openbabel
   - mcs07
+  - pacchem
 
 dependencies:
   - python=2.7
@@ -11,4 +12,5 @@ dependencies:
   - openbabel
   - cirpy
   - pytest
-
+  - x2z
+  - mess

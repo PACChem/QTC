@@ -1,0 +1,20 @@
+package:
+    name: qtc
+    version: 0.1.0
+
+source:
+    path: .
+
+requirements:
+    build:
+        - pip
+        - python
+    run:
+        - python
+        - numpy
+        - psutil
+        - openbabel
+        - cirpy
+        - x2z
+        - mess
+        - pytest
