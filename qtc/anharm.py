@@ -274,8 +274,8 @@ def main(args, vibrots = None):
             #a = nargs['pfreqs']).argsort()[::-1]
             #b = args['freqs'].argsort()[::-1]
         else:
-            proj, b   = get_freqs(args['freqfile'])
-            unproj, a = get_freqs(args['unprojfreq'])
+            proj, a   = get_freqs(args['freqfile'])
+            unproj, b = get_freqs(args['unprojfreq'])
             if 'ts' in args['freqfile']:
                 getextra = True
 
@@ -287,16 +287,16 @@ def main(args, vibrots = None):
             anlevel   = args['theory' ]
             optlevel  = args['optlevel']
             anharmlog = args['anharmlog' ] + '.log'
-            try:
-                andire = io.db_sp_path(anlevel.split('/')[0], anlevel.split('/')[1], anlevel.split('/')[2], None, smiles,
-                      optlevel[0], optlevel[1], optlevel[2])
-            except:
-                andire = ''
-            if io.check_file(andire + '/' + smiles + '.xmat'):
-                xmat = io.db_get_sp_prop(smiles, 'xmat', andire).split('\n')
-                for i in range(len(xmat)):
-                    xmat[i] = xmat[i].split(',')
-            elif io.check_file(anharmlog):
+            #try:
+            #    andire = io.db_sp_path(anlevel.split('/')[0], anlevel.split('/')[1], anlevel.split('/')[2], None, smiles,
+            #          optlevel[0], optlevel[1], optlevel[2])
+            #except:
+            #    andire = ''
+            #if io.check_file(andire + '/' + smiles + '.xmat'):
+            #    xmat = io.db_get_sp_prop(smiles, 'xmat', andire).split('\n')
+            #    for i in range(len(xmat)):
+            #        xmat[i] = xmat[i].split(',')
+            if io.check_file(anharmlog):
                 xmat = qc.get_gaussian_xmatrix(io.read_file(anharmlog),len(unproj))
         modes     = find_hinfreqs(proj,unproj,b)
         if type(xmat) == list:
