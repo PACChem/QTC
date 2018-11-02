@@ -1,16 +1,19 @@
 name: qtc-env
 
 channels:
-  - openbabel
-  - mcs07
-  - pacchem
+    - openbabel
+    - conda-forge  # needed for libxrender, which openbabel is missing
+    - mcs07
+    - pacchem
 
 dependencies:
-  - python=2.7
-  - numpy
-  - psutil
-  - openbabel
-  - cirpy
-  - pytest
-  - x2z
-  - mess
+    - pip
+    - python=2.7
+    - xorg-libxrender
+    - numpy
+    - psutil
+    - openbabel
+    - cirpy
+    - pytest
+    - x2z
+    - mess
