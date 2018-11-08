@@ -1,16 +1,15 @@
-#!/usr/bin/env python
 import argparse
 import datetime
 import time
 import subprocess
 import os
 from os.path import isfile
-import iotools as io
-import obtools as ob
-import qctools as qc
-import patools as pa
+from . import iotools as io
+from . import obtools as ob
+from . import qctools as qc
+from . import patools as pa
 import logging
-import unittools as ut
+from . import unittools as ut
 import math
 import numpy as np
 """
@@ -531,8 +530,8 @@ def get_messpf_input(mol,parameters):
             0    2
        End
     """
-    import unittools as ut
-    import anharm
+    from . import unittools as ut
+    from . import anharm
     natom = parameters['natom']
     label = parameters['qlabel']
     results = parameters['results']
@@ -707,7 +706,7 @@ def run_pf(messpf='messpf',inputfile='pf.inp'):
     End
     """
     import subprocess
-    import iotools as io
+    from . import iotools as io
     msg = ''
     if io.check_exe(messpf):
         if io.check_file(inputfile,1):
@@ -732,7 +731,7 @@ def run_thermp(thermpinput,thermpfile='thermp.dat',pffile='pf.out', thermpexe='t
     linus
     /tcghome/sjk/gen/aux_me/therm/thermp.exe
     """
-    import iotools as io
+    from . import iotools as io
     msg = ''
     io.write_file(thermpinput, thermpfile)
     if not io.check_file(thermpfile,1):
@@ -757,7 +756,7 @@ def run_pac99(formula,pac99='pac99'):
     pac99='/tcghome/sjk/gen/aux_me/therm/pac99.x'
     """
     from subprocess import Popen, PIPE
-    import iotools as io
+    from . import iotools as io
     msg = ''
     c97file = formula +'.c97'
     i97file = formula +'.i97'

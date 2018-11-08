@@ -2,8 +2,8 @@ import os
 import sys
 import numpy as np
 
-import iotools as io
-import qctools as qc
+from . import iotools as io
+from . import qctools as qc
 import logging
 def gauss_xmat(filename,natoms):
     """

@@ -1,8 +1,6 @@
-#!usr/bin/python
-
 import re
-import iotools as io
-import unittools as ut
+from . import iotools as io
+from . import unittools as ut
 import numpy as np
 import logging
 """
@@ -53,7 +51,7 @@ def gaussian_natom(s):
     """
     NAtoms=     30 NQM=       30 NQMF=       0 NMMI=      0 NMMIF=      0
     """
-    import iotools as io
+    from . import iotools as io
     if type(s) == str:
         lines = s.splitlines()
     keyword = 'NAtoms='
@@ -214,7 +212,7 @@ def gaussian_anzpve(lines):
     """
     Returns anharmonic zpve in au.
     """
-    from unittools import rcm2au,kj2au
+    from .unittools import rcm2au,kj2au
     zpve = 'ZPE\(anh\)=\s*([\d,\w,\+,\.,\-]*)'
     zpve = re.findall(zpve, lines)
     if len(zpve) > 0:

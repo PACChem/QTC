@@ -1,17 +1,13 @@
-#!usr/bin/python
-
 import re
 import numpy as np
 import os
 import sys
-#sys.path.insert(0, '/home/elliott/Packages/QTC/')
-sys.path.insert(0, '/home/snelliott/projects/anl/QTC/')
-import iotools as io
-import qctools as qc
-import patools as pa
-import obtools as ob
+from . import iotools as io
+from . import qctools as qc
+from . import patools as pa
+from . import obtools as ob
+from . import unittools as ut
 import logging
-import unittools as ut
 """
 Heatform determines the heat of formation for a molecule by using a basis of 
 molecules with well-determined heats of formation
@@ -302,7 +298,7 @@ def getname_fromdirname():
     return cwd.split('/')[-1]
 
 def nest_1_dic(bas,key1):
-    from newdb import db
+    from .newdb import db
  
     dicfound = False
     bas = ob.get_slabel(bas)
@@ -320,7 +316,7 @@ def nest_2_dic(bas,key1,key2=0):
     Returns a dictionary value that requires two key values (is in singly nested loop )
     """
     #from heatform_db import db
-    from newdb import db
+    from .newdb import db
  
     dicfound = False
     bas = ob.get_slabel(bas)
@@ -607,7 +603,7 @@ def find_E(bas, opt, en, freq, runE=True, anharm=False, dbdir='./'):
     """
     
     ### Check dictionary ###
-    from heatform_db import db
+    from .heatform_db import db
     E, zpve = 0, 0
     zpvetype = 'zpve'
     
@@ -850,9 +846,9 @@ def comp_coefficients(molform, basis='auto'):
 
 def E_BAC(bas, parameters):
     ### Check dictionary ###
-    from heatform_db import db
-    import qctools as qc
-    import iotools as io
+    from .heatform_db import db
+    from . import qctools as qc
+    from . import iotools as io
     slabel = qc.get_slabel(bas)
     calcindex = parameters['calcindex']
     qckeyword = parameters['qckeyword']
@@ -870,9 +866,9 @@ def E_BAC(bas, parameters):
 
 def E_QTC(bas, opt, en, freq, parameters):
     ### Check dictionary ###
-    from heatform_db import db
-    import qctools as qc
-    import iotools as io
+    from .heatform_db import db
+    from . import qctools as qc
+    from . import iotools as io
     natom = ob.get_natom(bas)
     slabel = qc.get_slabel(bas)
     parameters['natom'] = natom
@@ -913,7 +909,7 @@ def E_QTC(bas, opt, en, freq, parameters):
 
 
 def get_total_energy(mol, parameters):
-    import qctools as qc
+    from . import qctools as qc
     natom = ob.get_natom(mol)
     parameters['natom'] = natom
     calcindex = parameters['calcindex']

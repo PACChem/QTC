@@ -1,3 +1,4 @@
+# cmd: conda build . --python 2 -c pacchem -c conda-forge -c openbabel -c mcs07
 package:
     name: qtc
     version: 0.1.0

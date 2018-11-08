@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Since python have different modules for various
 IO related functionalities, it is good to have
@@ -115,7 +114,7 @@ def read_xyzdir(s, xyzdir):
     """ 
     Reads xyz from xyzdir 
     """
-    import obtools as ob
+    from . import obtools as ob
     xyz = ''
     slabel = ob.get_slabel(s)
     xyzfile = '{}{}{}.xyz'.format(xyzdir,os.path.sep,ob.get_smiles_filename(slabel))
@@ -728,7 +727,7 @@ def db_smiles_path(smiles, db_location = None):
     """
     Returns the path for a smiles molecule in a database
     """
-    import obtools as ob
+    from . import obtools as ob
     mol = ob.get_mol(smiles)
     directory = ob.get_smiles_path(mol)
     if db_location == None:
@@ -883,7 +882,7 @@ def parse_all(species, lines, optprog=None, optmethod=None, optbasis=None):
     energy, zmat, xyz, and freqs. 
     TODO: anharmonic, projected frequencies
     """
-    import patools as pa
+    from . import patools as pa
 
     prog   =  pa.get_prog(lines)
     method =  pa.method(  lines).lower().lstrip('r')
