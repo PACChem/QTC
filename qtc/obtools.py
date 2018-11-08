@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Module for simplifying and enhancing the usage of Open Babel.
 Open Babel is a tool-box mainly used for cheminformatics.
@@ -1503,7 +1502,7 @@ def write_isomers_list(listfile):
     The filename for the list is required as the input.
     The filename of the new file is returned.
     """
-    import iotools as io
+    from . import iotools as io
     slist = io.read_list(listfile)
     newlist = ''
     for s in slist:
@@ -1842,7 +1841,7 @@ def get_unique_path(x, mult=0, method=''):
     >>> if os.path.sep == '/': print(get_unique_path('C',method='pm6'))
     database/C/C/CH4/VNWKTOKETHGBQD-UHFFFAOYSA-N1/pm6
     """
-    import iotools as io
+    from . import iotools as io
     mol = get_mol(x, make3D=True)
     if mult == 0:
         mult = mol.spin
@@ -1893,7 +1892,7 @@ def get_smiles_path(x, mult=0, db= 'database'):
     canonical smiles strings are unique only for the same
     code that generates the smiles string.
     """
-    import iotools as io
+    from . import iotools as io
     if type(x) is pybel.Molecule:
         if mult == 0:
             mult = x.spin
@@ -1975,7 +1974,7 @@ def get_smiles_filename(x):
 
 
 def smiles2formula(filename):
-    import iotools as io
+    from . import iotools as io
     mols = io.read_list(filename)
     s = ''
     for mol in mols:

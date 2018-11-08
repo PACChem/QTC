@@ -4,4 +4,6 @@ from distutils.core import setup
 
 
 setup(name="qtc",
-      packages=["qtc"])
+      version="0.1.0",
+      packages=["qtc"],
+      scripts=["qtc.py"])

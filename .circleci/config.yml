@@ -13,8 +13,8 @@ jobs:
                 name: Install QTC and run tests
                 command: |
                     source activate qtc-env
-                    pip install .     # uses the setup.py file
-                    pytest -v tests/  # finds and runs tests
+                    pip install .               # uses the setup.py file
+                    python -m pytest -v tests/  # finds and runs tests
 workflows:
     version: 2
     build-all:

@@ -1,12 +1,11 @@
-#!/usr/bin/env python
 """
 Quantum chemistry tools.
 """
 import sys
-import obtools as ob
-import iotools as io
+from . import obtools as ob
+from . import iotools as io
 import numpy as np
-import patools as pa
+from . import patools as pa
 import logging
 try:
     import cclib
@@ -1910,7 +1909,7 @@ def get_gaussian_natom(lines):
     """
     NAtoms=     30 NQM=       30 NQMF=       0 NMMI=      0 NMMIF=      0
     """
-    import iotools as io
+    from . import iotools as io
     if type(lines) == str:
         lines = lines.splitlines()
     keyword = 'NAtoms='
@@ -1922,7 +1921,7 @@ def get_gaussian_basis(lines):
     """
     Standard basis: CC-pVDZ (5D, 7F)
     """
-    import iotools as io
+    from . import iotools as io
     if type(lines) == str:
         lines = lines.splitlines()
     keyword = 'Standard basis:'
@@ -1972,7 +1971,7 @@ def get_gaussian_xyz(lines,optimized=True):
       2          1           0        0.000000    0.000000    0.877181
  ---------------------------------------------------------------------
     """
-    import iotools as io
+    from . import iotools as io
     if type(lines) == str:
         lines = lines.splitlines()
     natom = get_gaussian_natom(lines)
@@ -2227,7 +2226,7 @@ def get_mopac_natom(lines):
     >>> logging.info get_mopac_natom(s)
     5
     """
-    import iotools as io
+    from . import iotools as io
     if type(lines) == str:
         lines = lines.splitlines()
     keyword = 'Empirical Formula'
@@ -2250,7 +2249,7 @@ def get_mopac_xyz(lines):
     H -0.3624 -0.5124 -0.8875
     <BLANKLINE>
     """
-    import iotools as io
+    from . import iotools as io
     if type(lines) == str:
         lines = lines.splitlines()
     natom = get_mopac_natom(lines)
@@ -2291,7 +2290,7 @@ def get_mopac_zpe(lines):
     Return zero point energy in kcal/mol from mopac output.
     >>> s = io.read_file('test/input.out')
     """
-    from unittools import au2kcal
+    from .unittools import au2kcal
     if type(lines) == str:
         lines = lines.splitlines()
     keyword = 'ZERO POINT ENERGY'
@@ -2303,7 +2302,7 @@ def get_mopac_energy(lines):
     Return electronic energy in hartree from mopac output.
     >>> s = io.read_file('../test/input.out')
     """
-    from unittools import ev2au
+    from .unittools import ev2au
     if type(lines) == str:
         lines = lines.splitlines()
     keyword = 'ELECTRONIC ENERGY       ='

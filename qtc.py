@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 import argparse
 import collections
-import iotools as io
-import obtools as ob
-import qctools as qc
-import tctools as tc
-import unittools as ut
-import dbtools as db
-import heatform as hf
+from qtc import iotools as io
+from qtc import obtools as ob
+from qtc import qctools as qc
+from qtc import tctools as tc
+from qtc import unittools as ut
+from qtc import dbtools as db
+from qtc import heatform as hf
 import pprint
 import sys
 import os
 import logging
 import numpy as np
-from patools import energy
+from qtc.patools import energy
 from timeit import default_timer as timer
 __updated__ = "2018-03-03"
 __authors__ = 'Murat Keceli, Sarah Elliott'

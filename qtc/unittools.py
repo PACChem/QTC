@@ -1,4 +1,3 @@
-#!usr/bin/python
 """
 Contains constants for unit conversion
 TODO: Use IUPAC recommended values, calculate
