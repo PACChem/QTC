@@ -1,0 +1,11 @@
+package:
+    name: thermp
+    version: 0.1.0
+
+source:
+    path: .
+
+requirements:
+    build:
+        - cmake
+        - {{ compiler('fortran') }}

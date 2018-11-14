@@ -14,8 +14,11 @@ requirements:
         - python
         - numpy
         - psutil
-        - openbabel
-        - cirpy
-        - x2z
-        - mess
         - pytest
+        - mcs07::cirpy
+        - openbabel::openbabel
+        - conda-forge::xorg-libxrender
+        - pacchem::x2z
+        - pacchem::mess
+        - pacchem::pac99
+        - pacchem::thermp

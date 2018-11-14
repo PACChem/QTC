@@ -1,0 +1,41 @@
+   1, 4
+  Nwell, Nprod
+  29
+  nt
+71.97    298.                          //enthalpy at specified T, with T = 0 or 298 K
+W1                                      //name of species
+C  2                                    //composition in terms of
+H  3                                    //element_name  element_count
+**
+1000.                                   //temperature to break the fit
+
+55.01    298.                        //enthalpy at specified T, with T = 0 or 298 K
+CH3OO                                    //name of species
+C  1                                    //composition in terms of
+O  2                                    //composition in terms of
+H  3                                    //element_name  element_count
+**
+1000.                                   //temperature to break the fit
+
+51.6314     0.                         //enthalpy at specified T, with T = 0 or 298 K
+CH4                                    //name of species
+C  1                                    //element_name  element_count
+H  4                                    //element_name  element_count
+**
+1000.                                   //temperature to break the fit
+
+55.01    298.                        //enthalpy at specified T, with T = 0 or 298 K
+CH3OOH                                    //name of species
+C  1                                    //composition in terms of
+O  2                                    //composition in terms of
+H  4                                    //element_name  element_count
+**
+1000.                                   //temperature to break the fit
+
+51.6314     0.                         //enthalpy at specified T, with T = 0 or 298 K
+CH3                                    //name of species
+C  1                                    //element_name  element_count
+H  3                                    //element_name  element_count
+**
+1000.                                   //temperature to break the fit
+
