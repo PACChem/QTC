@@ -6,6 +6,7 @@ from . import unittools
 from . import dbtools
 from . import heatform
 from . import patools
+from . import ipyx2z
 
 __all__ = ['iotools', 'obtools', 'qctools', 'tctools', 'unittools', 'dbtools',
-           'heatform', 'patools']
+           'heatform', 'patools', 'ipyx2z']
