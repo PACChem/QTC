@@ -282,6 +282,17 @@ def gaussian_xyz(lines):
         xyz = ''
     return xyz
 
+def freq_xyz(lines):
+    lines = lines.split('Optimized')[1].split('Z-Matrix orientation')[1].split('Distance matrix')[0]
+    geo = gaussian_geo(lines) 
+    if geo:
+        n   = str(len(geo.splitlines()))
+        xyz = n + '\n\n' +  geo
+    else:
+        xyz = ''
+    return xyz
+
+
 def gaussian_rotconstscent(lines):
     startkey = 'Effective Rotational Constants'
     lines = lines.splitlines()
