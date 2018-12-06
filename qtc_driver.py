@@ -432,28 +432,33 @@ def run(s):
                     logging.error('Cannot find xyz, optimization failed')
                     parameters['break'] = True
                     runthermo = False
-############################ BLUES specific
             if 'Hessian' in parameters['results'] and 'RPHt input' in parameters['results']:
-                RPHtexe = '/lcrc/project/PACC/codes/EStokTP/exe/RPHt.exe'
-                if not task.startswith('tors') and not task.startswith('md'):
+                RPHtexe = 'RPHt.exe'
+                if not task.startswith('tors') and not task.startswith('md') and not task.startswith('amd'):
                     try:
                         RPHt, geolines = parameters['results']['RPHt input'].split('geometry')
                         geolines, gradlines = geolines.split('gradient')[:2]
-                        xyz = io.read_file(formula + '_initial.xyz').splitlines()[2:]
+                        if task.startswith('anharm'):
+                            from patools import freq_xyz
+                            xyz = io.read_file(formula + '.out')
+                            xyz = freq_xyz(xyz).splitlines()[2:]
+                        else:
+                            xyz = io.read_file(formula + '_initial.xyz').splitlines()[2:]
                         RPHt += 'geometry\n'
                         for i, line in enumerate( geolines.splitlines()[1:]):
-                            RPHt += '\t' + '\t'.join(line.split()[0:])+ '\n'
-                            #RPHt += '\t' + '\t'.join(line.split()[0:3]) + '\t' + '\t'.join(xyz[i].split()[1:]) + '\n'
+                            if task.startswith('anharm'):
+                                RPHt += '\t' + '\t'.join(line.split()[0:3]) + '\t'
+                                RPHt +=  '\t'.join(xyz[i].split()[1:]) + '\n'
+                            else:
+                                RPHt += '\t' + '\t'.join(line.split()[0:])+ '\n'
                         RPHt += 'gradient' +  gradlines.split('Hessian')[0] + 'Hessian\n' + parameters['results']['Hessian']
                         parameters['results']['RPHt input'] = RPHt
                         RPHtfile = 'RPHt_input_data.dat'
+                        if io.check_file(RPHtexe):
+                            io.write_file(RPHt,RPHtfile)
+                            io.execute(RPHtexe  + ' ' + RPHtfile)
                     except:
                         logging.error('RPHT data is erroneous:\n{}'.format(parameters['results']['RPHt input']))
-                if io.check_file(RPHtexe):
-                    if not task.startswith('tors') and not task.startswith('md'):
-                        io.write_file(RPHt,RPHtfile)
-                        io.execute(RPHtexe  + ' ' + RPHtfile)
-                    #if io.check_file( 'hrproj_freq.dat'):
                     if io.check_file( 'me_files/reac1_fr.me'):
                         out = io.read_file('me_files/reac1_fr.me', aslines=False)
                         pfreqs = qc.get_mess_frequencies(out)
@@ -465,7 +470,6 @@ def run(s):
                         logging.warning('hrproj_freq.dat file not found')
                 else:
                     logging.warning('{} not found.'.format(RPHtexe))
-#########################
         else:
             if 'opt' in task:
                 parameters['break'] = True
@@ -503,7 +507,7 @@ def run(s):
     else:
         parameters['all results'][slabel][qlabel]['zpve'] = 0.0
     parameters['all results'][slabel][qlabel]['path'] = rundir   
-    if 'hindered potential' in parameters['results'] and (task.startswith('tors') or task.startswith('md')):
+    if 'hindered potential' in parameters['results'] and (task.startswith('tors') or task.startswith('md') or task.startswith('amd')):
         tc.get_hindered_potential(parameters['results']['hindered potential'],report=parameters['debug'])
         
     #parameters['all results'][slabel]['mol_index'] = parameters['mol_index']  

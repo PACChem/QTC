@@ -67,9 +67,9 @@ db = [
 
 {"formula":"c-CH2CH2CH2",  "_id":"C1CC1_m1","delHf":  {"ATcT":70.797464,  "ANL0":71.46272,  "ATcTsig":0.456056},  "delHf298":  {"ATcT":53.65}},
 
-{"formula":"CH3CHCH3",  "_id":"C[CH]C_m1","delHf":  {"ATcT":105.277808,  "ANL0":105.10208,  "ATcTsig":0.665256},  "delHf298":  {"ATcT":88.68}},
+{"formula":"CH3CHCH3",  "_id":"C[CH]C_m2","delHf":  {"ATcT":105.277808,  "ANL0":105.10208,  "ATcTsig":0.665256},  "delHf298":  {"ATcT":88.68}},
 
-{"formula":"CH3CH2CH2",  "_id":"CC[CH2]_m1","delHf":  {"ATcT":117.92604,  "ANL0":118.198,  "ATcTsig":0.60668},  "delHf298":  {"ATcT":100.81}},
+{"formula":"CH3CH2CH2",  "_id":"CC[CH2]_m2","delHf":  {"ATcT":117.92604,  "ANL0":118.198,  "ATcTsig":0.60668},  "delHf298":  {"ATcT":100.81}},
 
 {"formula":"CH3CH2CH3",  "_id":"CCC_m1","delHf":  {"ATcT":-82.746968,  "ANL0":-83.2616,  "ATcTsig":0.184096},  "delHf298":  {"ATcT":-105.03}},
 
@@ -791,9 +791,9 @@ db = [
 
 {"formula":"c-CH2CH2CH2",  "_id":"C1CC1_m1","delHf":  {"ATcT":70.797464,  "ANL0":71.46272,  "ATcTsig":0.456056},  "delHf298":  {"ATcT":53.65}},
 
-{"formula":"CH3CHCH3",  "_id":"C[CH]C_m1","delHf":  {"ATcT":105.277808,  "ANL0":105.10208,  "ATcTsig":0.665256},  "delHf298":  {"ATcT":88.68}},
+{"formula":"CH3CHCH3",  "_id":"C[CH]C_m2","delHf":  {"ATcT":105.277808,  "ANL0":105.10208,  "ATcTsig":0.665256},  "delHf298":  {"ATcT":88.68}},
 
-{"formula":"CH3CH2CH2",  "_id":"CC[CH2]_m1","delHf":  {"ATcT":117.92604,  "ANL0":118.198,  "ATcTsig":0.60668},  "delHf298":  {"ATcT":100.81}},
+{"formula":"CH3CH2CH2",  "_id":"CC[CH2]_m2","delHf":  {"ATcT":117.92604,  "ANL0":118.198,  "ATcTsig":0.60668},  "delHf298":  {"ATcT":100.81}},
 
 {"formula":"CH3CH2CH3",  "_id":"CCC_m1","delHf":  {"ATcT":-82.746968,  "ANL0":-83.2616,  "ATcTsig":0.184096},  "delHf298":  {"ATcT":-105.03}},
 

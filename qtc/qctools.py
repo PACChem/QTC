@@ -24,6 +24,9 @@ def sort_species_list(slist, printinfo=False, byMass=False):
     tmplist= []
     for s in slist:
         # s = get_slabel(s)
+        hof = 'None'
+        if '_e' in s:
+            hof = ob.get_smileshof(s)
         isomers = ob.get_isomers(s)
         if len(isomers) > 1:
             logging.info('{} isomers found for {} : {}'.format(len(isomers),s,isomers))
@@ -37,6 +40,8 @@ def sort_species_list(slist, printinfo=False, byMass=False):
             smult  = ob.get_multiplicity(isomer)
             obmult = ob.get_multiplicity(mol)
             mass   = ob.get_mass(mol)
+            if hof and hof != 'None':
+                isomer += '_e' + str(hof)
             tmplist.append([isomer,formula,smult,obmult,nrotor,nelec,natom,nheavy,mass])
     if byMass:
         tmplist = sorted(tmplist,reverse=False,key=lambda x: (x[8],x[4],x[5],x[6]))
@@ -239,7 +244,7 @@ def get_input(x, template, parameters):
             pass # Ignore comments
         else:
             inp += line + '\n'
-    if task.startswith('tors') or task.startswith('md'):
+    if task.startswith('tors') or task.startswith('md') or task.startswith('amd'):
         if io.check_file(xyzpath):
             inp = inp.replace("QTC(XYZPATH)",xyzpath)
         else:
@@ -325,7 +330,7 @@ def get_input(x, template, parameters):
     inp = inp.replace("QTC(UNIQUENAME)", uniquename)
     inp = inp.replace("QTC(SMILESNAME)", smilesname)
     inp = inp.replace("QTC(TMPDIR)", tmpdir)
-    if task.startswith('tors') or task.startswith('md'):
+    if task.startswith('tors') or task.startswith('md') or task.startswith('amd'):
         inp = inp.replace("QTC(SMILES)", slabel)
     else:
         inp = inp.replace("QTC(SMILES)", smiles)
@@ -489,13 +494,13 @@ def parse_qckeyword(parameters, calcindex=0):
         elif task.startswith('torsscan'):
             logging.info('Replacing Task = {} with Task = optfreq, since there are no torsions.'.format(task))
             task = 'optfreq'
-        elif task.startswith('md'):
+        elif task.startswith('md') or task.startswith('amd') :
             logging.info('Replacing Task = {} with Task = optfreq, since there are no torsions.'.format(task))
             task = 'optfreq'
-    elif parameters['nallrotor'] < 2:
-        if task.startswith('md'):
-            logging.info('Replacing Task = {} with Task = torsscan, since there is only one torsion.'.format(task))
-            task = 'torsscan'
+    #elif parameters['nallrotor'] < 2:
+    #    if task.startswith('md'):
+    #        logging.info('Replacing Task = {} with Task = torsscan, since there is only one torsion.'.format(task))
+    #        task = 'torsscan'
     if task.startswith('ext') or task.startswith('cbs') or task.startswith('comp'):
         task = 'composite'
         if len(tokens) > 2:
@@ -539,7 +544,7 @@ def parse_qckeyword(parameters, calcindex=0):
         elif 'opt' in task:
             qcdirectory = io.fix_path(io.join_path(*['opt',method,basis,package]))
             parameters['optdir'] = qcdirectory
-        elif task == 'torsscan' or task == 'md':
+        elif task == 'torsscan' or task == 'md' or task == 'amd':
             qcdirectory = io.fix_path(io.join_path(*[optdir,task,method,basis,package]))
             parameters['freqdir'] = qcdirectory
         elif task.startswith('freq') or task.startswith('harm') or task.startswith('hrm'):
@@ -652,6 +657,8 @@ def parse_output(s, formula, write=False):
     else:
         logging.info("First parameter in parse_output should be a string or a list of strings")
     package = get_output_package(s)
+    if not package:
+        package = ''
     d = {}
     [method,calculation,xyz,basis] = ['na']*4
     nbasis = 0
@@ -740,7 +747,7 @@ def parse_output(s, formula, write=False):
         zpve = get_mopac_zpe(s)
         if energy:
             parsed = True
-    elif package.startswith('tors') or package.startswith('md'):
+    elif package.startswith('tors') or package.startswith('md') or package.startswith('amd'):
         #optlevel, method, energy = get_torsscan_info(s)
         outfile = 'geoms/reac1_l1.log'
         outfile2 = 'geom.log' #  For torsopt
@@ -1139,7 +1146,7 @@ def run(s, parameters, mult=None, trial=0):
                 if io.check_file('geom.xyz'):
                     msg = 'Skipping calculation, found "{0}"\n'.format(io.get_path('geom.xyz'))
                     runqc = False               
-            elif task.startswith('md'):
+            elif task.startswith('md') or task.startswith('amd'):
                 if io.check_file('me_files/reac1_hr.me'):
                     if 'Quantum' in io.read_file('me_files/reac1_hr.me'):
                         msg = 'Skipping calculation, found "{0}"\n'.format(io.get_path('me_files/reac1_hr.me'))
@@ -1168,6 +1175,10 @@ def run(s, parameters, mult=None, trial=0):
     elif task.startswith('md'):
         package = 'torsscan'
         templatename =  'md_template.txt'
+        templatefile = io.join_path(*[tempdir,templatename])
+    elif task.startswith('amd'):
+        package = 'torsscan'
+        templatename =  'amd_template.txt'
         templatefile = io.join_path(*[tempdir,templatename])
     else:
         if trial > 0:
@@ -1203,9 +1214,20 @@ def run(s, parameters, mult=None, trial=0):
             shutil.copytree(ddir, pwd)
             io.cd(pwd)
             io.write_file('\n','RUNNING.tmp')
+        elif task.startswith('amd'):
+            import shutil
+            ddir = pwd.split('amd')
+            if len(ddir) > 2:
+                ddir = 'amd'.join(ddir[:-1]) + 'torsscan' + ddir[-1]
+            else:
+                ddir = ddir[0] + 'torsscan' + ddir[1]
+            shutil.rmtree(pwd)
+            shutil.copytree(ddir, pwd)
+            io.cd(pwd)
+            io.write_file('\n','RUNNING.tmp')
         inpfile = io.join_path(*[pwd, inpfile])
         io.write_file(inptext, inpfile)
-        if package in ['nwchem', 'molpro', 'mopac', 'gaussian', 'torsscan','torsopt','qchem','md' ]:
+        if package in ['nwchem', 'molpro', 'mopac', 'gaussian', 'torsscan','torsopt','qchem','md','amd' ]:
             if package.startswith('nwc'):
                 io.mkdir(tmpdir)
                 if parameters['machinefile']:
@@ -1224,12 +1246,12 @@ def run(s, parameters, mult=None, trial=0):
                 ldpath= io.get_env('LD_LIBRARY_PATH')
                 ldpath = mopacdir + ':' + ldpath
                 io.set_env_var('LD_LIBRARY_PATH',ldpath)
-            elif task.startswith('tors') or task.startswith('md'):
+            elif task.startswith('tors') or task.startswith('md') or task.startswith('amd'):
                 parameters['qcexe'] = parameters['torsscan']
             else:
                 parameters['qcexe'] = parameters[package]
         if io.check_file(inpfile, timeout=1):
-            if package in ['torsscan','torsopt', 'md']:
+            if package in ['torsscan','torsopt', 'md', 'amd']:
                 configfile = parameters['qcexe'].replace('torsional_scan.py','configfile.txt')
                 command = parameters['qcexe'] + ' -i' + inpfile + ' -o ' + outfile + ' -c' + configfile
                 logging.info('Running quantum chemistry calculation with {}'.format(command))
