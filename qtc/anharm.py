@@ -216,6 +216,10 @@ def anharm_freq(freqs,xmat):
         for j in range(len(freqs)):
             if j != i:
                 tmp += xmat[i][j]
+        if tmp > 0:
+            logging.warning('Positive anharmonic correction on Mode {:d}'.format(i+1))
+        if tmp < 400:
+            logging.warning('Large anharmonic correction of {:f} on Mode {:d}'.format(tmp, i+1))
         anharms[i] += 1./2 * tmp
 
     return anharms
@@ -276,9 +280,8 @@ def main(args, vibrots = None):
         else:
             proj, a   = get_freqs(args['freqfile'])
             unproj, b = get_freqs(args['unprojfreq'])
-            if 'ts' in args['freqfile']:
-                getextra = True
-
+        if 'ts' in args['freqfile']:
+            getextra = True
         #xmat = gauss_xmat(anharmlog,natoms)
         if 'xmat' in args:
             xmat = args['xmat']
@@ -313,8 +316,8 @@ def main(args, vibrots = None):
         #proj, b   = get_freqs(eskproj)
         if vibrots:
             vibrots = remove_vibrots(vibrots, modes)
-            if getextra:
-                extra +=   '\t\tTunneling    Eckart\n\tImaginaryFrequency[1/cm]\t{}\n\tWellDepth[kcal/mol]\t$wdepfor\n\tWellDepth[kcal/mol]\t$wdepback\nEnd'.format(abs(anfreq[0]))
+        if getextra:
+            extra +=   '\t\tTunneling    Eckart\n\tImaginaryFrequency[1/cm]\t{}\n\tWellDepth[kcal/mol]\t$wdepfor\n\tWellDepth[kcal/mol]\t$wdepback\nEnd'.format(abs(anfreq[0]))
         return anfreq, mess_fr(anfreq),  xmat, mess_x(xmat,anfreq), extra, vibrots
     ##########################
     else: 
@@ -325,6 +328,8 @@ def main(args, vibrots = None):
         eskunproj = args.unprojfreq
         anharmlog = args.anharmlog
         node      = args.node
+        if 'ts' in args.freqfile:
+            getextra = True
         if args.writegauss.lower() == 'true':
             write_anharm_inp(eskfile,'anharm.inp')
         if args.rungauss.lower() == 'true':
