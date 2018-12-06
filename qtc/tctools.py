@@ -581,8 +581,8 @@ def get_messpf_input(mol,parameters):
         xmat = np.asarray(results['xmat'])
         if 'pfreqs' in results:
             freqs, fill, xmat, fill2, fill3, vibrots = anharm.main(results, vibrots)
-        elif 'afreqs' in results:
-            freqs = results['afreqs']
+        #elif 'afreqs' in results:
+        #    freqs = results['afreqs']
         #xmat = anharm.mess_x(xmat)
     if 'scale' in parameters:
         scale = parameters['scale']
@@ -603,16 +603,32 @@ def get_messpf_input(mol,parameters):
     if natom == 1:
         inp += 'Atom\n'
         inp += 'Mass[amu] {}\n'.format(ut.atommasses[formula])
-        inp += 'End\n'
+        excited = {'[O]_m3':[[3,158.265],[3,  226.977]]}
+        nelec = 1
+        if parameters['slabel'] in excited:
+            nelec += len(excited[parameters['slabel']])
+        inp += 'ElectronicLevels[1/cm]  {:d}\n'.format(nelec)
+        inp += '   0 {0}'.format(multiplicity)
+        if parameters['slabel'] in excited:
+            for level in excited[parameters['slabel']]:
+                inp += '\n {:.3f}  {:d}'.format(level[1], level[0])
+        inp += '\nEnd\n'
     else:
         ###  BEGIN RRHO
         inp += 'RRHO\n'
         inp += '  Geometry[angstrom] {0} !{1}\n\t  '.format(natom,label)
         inp += '\t  '.join(xyz.splitlines(True)[2:])
         inp += '\n  ZeroEnergy[kcal/mol] {0} ! {1}\n'.format(zpve,label)
-        inp += '  ElectronicLevels[1/cm]  1\n'
-        inp += '     0 {0}\n'.format(multiplicity)
-
+        excited = {'[O]_m3':[[3,158.265],[3,  226.977]],'[OH]_m2':[[2, 140.]]}
+        nelec = 1
+        if parameters['slabel'] in excited:
+            nelec += len(excited[parameters['slabel']])
+        inp += '  ElectronicLevels[1/cm]  {:d}\n'.format(nelec)
+        inp += '     0 {0}'.format(multiplicity)
+        if parameters['slabel'] in excited:
+            for level in excited[parameters['slabel']]:
+                inp += '\n   {:.3f}  {:d}'.format(level[1], level[0])
+        inp += '\n'
         ###  BEGIN CORE
         coreline  = '   Core RigidRotor\n'
         coreline += '      ZeroPointEnergy[1/cm] {}\n'.format(zpe)
@@ -996,7 +1012,7 @@ def get_enthalpy(rmgpoly,T):
                                1.344086535e-09,
                                -4.50222436e-13,
                                2548.182033,
-                               1.600701434]},
+                                1.600701434]},
                   {u'Tmax': [3000.0, u'K'],
                    u'Tmin': [1000.0, u'K'],
                    u'coeffs': [3.25257139,
@@ -1030,6 +1046,14 @@ def get_enthalpy(rmgpoly,T):
         logging.error['{} K is outside the temperature range of the given NASA polynomials [{},{}]'.format
                       (T,rmgpoly['Tmin'][0],rmgpoly['Tmax'][0])]
     return H
+
+def get_gibbs(rmgpoly,T):
+    G = 0.
+    H = get_enthalpy(rmgpoly,T)
+    S = get_entropy(rmgpoly,T)
+    if H and S:
+        G = H - T * S / 1000.
+    return G 
 
 
 def get_hindered_potential(s,report=False):
