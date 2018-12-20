@@ -73,9 +73,9 @@ def get_args():
                         help='Machinefile for mpirun')
     parser.add_argument('-k', '--qckeyword', type=str,
                         default='',
-                        help='Keyword string that defines quantum chemistry calculations i.e.: "opt/ccsd/cc-pvdz/gaussian,energy/ccsd/cc-pvtz/nwchem,extrapolation/cbs/energy=0.3*E0+0.7*E1" Note that each calculation is separated by a comma (,) and calculations are defined by TASK/METHOD/BASIS/PACKAGE. TASK can be opt, freq, anharm,extrapolation.METHOD and BASIS are simply copied into quantum chemistry input file as defined in the templates folder. PACKAGE can be gaussian, molpro or nwchem')
+                        help='Keyword string that defines quantum chemistry calculations i.e.: "opt/ccsd/cc-pvdz/gaussian,energy/ccsd/cc-pvtz/nwchem,extrapolation/cbs/energy=0.3*E0+0.7*E1" Note that each calculation is separated by a comma (,) and calculations are defined by TASK/METHOD/BASIS/PACKAGE. TASK can be torsscan, opt, freq, anharm,extrapolation. METHOD and BASIS are simply copied into quantum chemistry input file as defined in the templates folder. PACKAGE can be gaussian, molpro, mopac, or nwchem.')
     parser.add_argument('-t', '--qctemplate', type=str,
-                        default='/home/elliott/Packages/QTC/templates',
+                        default='qtc/templates',
                         help='Path for the templates directory. Templates have a specific format for filenames. See qtc/templates.')
     parser.add_argument('-l', '--loglevel', type=int,
                         default=-1,
@@ -172,8 +172,7 @@ def get_args():
                         default='g09',
                         help='Path for gaussian executable')
     parser.add_argument('--torsscan', type=str,
-                        default='/home/elliott/Packages/TorsScan/torsional_scan.py',
-                        #default='/home/keceli/qtc/TorsScan/torsional_scan.py',
+                        default='rc_driver.py',
                         help='Path for torsscan executable')
     parser.add_argument('--messpf', type=str,
                         default='messpf',
@@ -188,10 +187,6 @@ def get_args():
                         default='x2z',
                         help='Path for x2z executable')
     parser.add_argument('--suppress_printing', action='store_true')
-    parser.add_argument('--qcscript', type=str,
-#                        default='/lcrc/project/PACC/test-awj/builddb/bin/qcscript.pl',
-                        default='',
-                        help='Path for qcscript perl script')
     return parser.parse_args()
 
 def printp(string):
