@@ -1,4 +1,4 @@
-# Quantum Thermo Chemistry (QTC) 
+# Quantum Thermochemistry Calculator (QTC) 
 [![Build Status](https://travis-ci.org/keceli/QTC.svg?branch=master)](https://travis-ci.org/keceli/QTC)
 
 QTC includes modules that integrates open babel with quantum chemistry calculations and generates NASA polynomials in different formats.
@@ -7,7 +7,6 @@ It depends on:
   * Open Babel for cheminformatics (read/write chemical identifiers)
   * MOPAC, NWChem, Gaussian, Molpro for quantum chemistry calculations
   * MESS for calculating partititon function
-  * RMG for generating a species list important for combustion chemistry
   * PAC99, thermp for format conversions
 
 ## Installation
@@ -25,13 +24,18 @@ Run qtc after activating qtc-env environment, i.e.
 ```
 source activate qtc-env
 ```
-Alternatively, you can install them with conda:
-```
-conda install numpy psutil
-conda install -c openbabel openbabel
-conda install -c mcs07 cirpy 
+
 ```
 ## Run QTC
+To run a series of quantum chemistry calculations for a water molecule (SMILES for H2O is O) with different packages
 ```
-python src/qtc.py -i O -k 'opt/mp2/dz/nwchem' -Q
+python src/qtc.py -i O -k 'opt/mp2/dz/gaussian,freq/ccsd/dz/molpro,energy/ccsd(t)/adz/nwhcem' -Q
+```
+To run thermochemistry calculations at the end, add `-T`
+```
+python src/qtc.py -i O -k 'opt/mp2/dz/gaussian,freq/ccsd/dz/molpro,energy/ccsd(t)/adz/nwhcem' -Q -T
+```
+If you add -J, QTC generates a JSON file containing all the results
+```
+python src/qtc.py -i O -k 'opt/mp2/dz/gaussian,freq/ccsd/dz/molpro,energy/ccsd(t)/adz/nwhcem' -Q -T -J
 ```
