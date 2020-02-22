@@ -66,9 +66,9 @@ def rm(fname):
     """
     import shutil
     try:
-        shutil.rmtree(dname,ignore_errors=True)
+        shutil.rmtree(dname, ignore_errors=True)
     except OSError as e:
-        logging.error("Error in deleting {}: {}" % (dname,e.strerror))
+        logging.error("Error in deleting {}: {}" % (dname, e.strerror))
     return
 
 
@@ -95,13 +95,13 @@ def cd(path):
     return
 
 
-def mv(oldname,newname):
+def mv(oldname, newname):
     """
     Renames or moves a file
     """
     import os
     try:
-        os.rename(oldname,newname)
+        os.rename(oldname, newname)
     except:
         logging.debug('Command "mv {0} {1}" failed' .format(oldname, newname))
     return
@@ -122,7 +122,7 @@ def read_xyzdir(s, xyzdir):
     from . import obtools as ob
     xyz = ''
     slabel = ob.get_slabel(s)
-    xyzfile = '{}{}{}.xyz'.format(xyzdir,os.path.sep,ob.get_smiles_filename(slabel))
+    xyzfile = '{}{}{}.xyz'.format(xyzdir, os.path.sep, ob.get_smiles_filename(slabel))
     if check_file(xyzfile):
        xyz = read_file(xyzfile)
     elif check_file(xyzfile.split('_m')[0] + '_m1.xyz'):
@@ -157,7 +157,7 @@ def yield_files_recursive(directory, pattern):
                 yield filename
 
 
-def find_files(directory,pattern):
+def find_files(directory, pattern):
     """
     Returns a list of files that matches the pattern in a given directory
     """
@@ -234,7 +234,7 @@ def get_unique_filename(fname):
     """
     counter = 1
     uname = fname
-    while check_file(uname,timeout=0.01):
+    while check_file(uname, timeout=0.01):
         uname = fname + '_' + str(counter)
         counter += 1
     return uname
@@ -244,20 +244,20 @@ def fix_path(s):
     """
     Returns a path with problematic characters replaced by safer ones.
     """
-    s = s.replace('[','_b_')
-    s = s.replace(']','_d_')
+    s = s.replace('[', '_b_')
+    s = s.replace(']', '_d_')
     #s = s.replace('=','_e_')
-    s = s.replace(':','_i_')
-    s = s.replace('|','_j_')
-    s = s.replace('\\','_k_')
+    s = s.replace(':', '_i_')
+    s = s.replace('|', '_j_')
+    s = s.replace('\\', '_k_')
     #s = s.replace('/','_l_')
-    s = s.replace('(','_p_')
-    s = s.replace(')','_q_')
-    s = s.replace('*','_s_')
-    s = s.replace('#','_t_')
-    s = s.replace('<','_v_')
-    s = s.replace('>','_y_')
-    s = s.replace('?','_z_')
+    s = s.replace('(', '_p_')
+    s = s.replace(')', '_q_')
+    s = s.replace('*', '_s_')
+    s = s.replace('#', '_t_')
+    s = s.replace('<', '_v_')
+    s = s.replace('>', '_y_')
+    s = s.replace('?', '_z_')
     return s
 
 
@@ -320,7 +320,7 @@ def cp(source, target):
     return
 
 
-def symlink(source,linkname):
+def symlink(source, linkname):
     """
     Create a symbolic link. (works only on unix based systems)
     """
@@ -328,7 +328,7 @@ def symlink(source,linkname):
         logging.debug('Target link {} exists, not creating a new one'.format(linkname))
     else:
         try:
-            os.symlink(source,linkname)
+            os.symlink(source, linkname)
         except Exception as e:
             logging.warning('Symlink exception caught: {}'.format(e))
     return
@@ -400,7 +400,7 @@ def read_list(listfile):
     Skips blank lines.
     """
     with open(listfile, 'r') as f:
-        lines = filter(None, ((line.rstrip()) for line in f))
+        lines = [_f for _f in ((line.rstrip()) for line in f) if _f]
     return lines
 
 
@@ -431,7 +431,7 @@ def execute_old(exe,inp=None,out=None):
     if not check_exe(exe):
         return 'Executable "{0}" not found.\n'.format(exe)
     if inp:
-        if not check_file(inp,1):
+        if not check_file(inp, 1):
             return 'Input file "{0}" not found.\n'.format(get_path(inp))
     if inp and out:
         process = Popen([exe, inp, out], stdout=PIPE, stderr=PIPE)
@@ -452,7 +452,7 @@ def execute_old(exe,inp=None,out=None):
     return msg
 
 
-def set_env_var(var,value):
+def set_env_var(var, value):
     import os
     os.environ[var] = value
     return
@@ -579,7 +579,7 @@ def execute(command, stdoutfile=None, stderrfile=None, merge=False, wait=True):
     "STDOUT:\nb'this also works\\n'\nSTDERR:\nb''\n"
     """
     from subprocess import Popen, PIPE
-    if type(command) == str:
+    if isinstance(command, str):
         commandstr = command
         command = command.split()
     else:
@@ -592,15 +592,15 @@ def execute(command, stdoutfile=None, stderrfile=None, merge=False, wait=True):
         out, err = process.communicate()
     else:
         process = Popen(command, close_fds=True)
-        out, err = '',''
+        out, err = '', ''
     if merge:
-        if type(out) == str and type(err) == str:
+        if isinstance(out, str) and isinstance(err, str):
             out += err
     if out is None or out == '':
         pass
     else:
         if stdoutfile:
-            write_file(out,stdoutfile)
+            write_file(out, stdoutfile)
             msg += 'STDOUT is appended to {0}\n'.format(stdoutfile)
         else:
             msg += 'STDOUT:\n{0}\n'.format(out)
@@ -634,7 +634,7 @@ def get_stdout_stderr(command):
     b'this also works\n'
     """
     from subprocess import Popen, PIPE
-    if type(command) == str:
+    if isinstance(command, str):
         commandstr = command
         command = command.split()
     else:
@@ -714,11 +714,11 @@ def get_zip_info(zipfilename):
     import zipfile
     compress_size = 0
     file_size     = 0
-    with zipfile.ZipFile(zipfilename,mode='r') as z:
+    with zipfile.ZipFile(zipfilename, mode='r') as z:
         for info in z.infolist():
             compress_size += info.compress_size
             file_size     += info.file_size
-    return len(z.infolist()),file_size, compress_size
+    return len(z.infolist()), file_size, compress_size
 
 
 def db_head_path(db_location=None):
@@ -769,7 +769,7 @@ def db_opt_path(prog, method, basis, db_location=None, smiles=None):
         directory = db_smiles_path(smiles, db_location)
     if method == None:
         return join_path(directory, 'sp/')
-    return join_path(directory, prog_meth_bas_path(prog, method, basis)).replace('(','_').replace(')','_')
+    return join_path(directory, prog_meth_bas_path(prog, method, basis)).replace('(', '_').replace(')', '_')
 
 
 def db_sp_path(prog, method, basis, db_location=None, smiles=None, optprog=None, optmethod=None, optbasis=None):
@@ -785,7 +785,7 @@ def db_sp_path(prog, method, basis, db_location=None, smiles=None, optprog=None,
         if optprog == None:
             return db_head_path(db_location)
         return directory
-    return join_path(directory, prog_meth_bas_path(prog,method,basis)).replace('(','_').replace(')','_')
+    return join_path(directory, prog_meth_bas_path(prog, method, basis)).replace('(', '_').replace(')', '_')
 
 
 def db_store_opt_prop(s, smiles, typ='zmat', db_location=None, prog=None, method=None, basis=None):
@@ -928,9 +928,9 @@ def parse_all(species, lines, optprog=None, optmethod=None, optbasis=None):
         freqs  = ', '.join(freq for freq in freqs[::-1])
         db_store_sp_prop(freqs,  species, 'hrm', None, prog, method, basis, optprog, optmethod, optbasis)
     if zpve != None:
-        db_store_sp_prop(str( zpve),  species,'zpve', None, prog, method, basis, optprog, optmethod, optbasis)
+        db_store_sp_prop(str( zpve),  species, 'zpve', None, prog, method, basis, optprog, optmethod, optbasis)
     if anzpve != None:
-        db_store_sp_prop(str(anzpve), species,'anzpve', None, prog, method, basis, optprog, optmethod, optbasis)
+        db_store_sp_prop(str(anzpve), species, 'anzpve', None, prog, method, basis, optprog, optmethod, optbasis)
     return
 
 if __name__ == "__main__":
