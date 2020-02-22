@@ -12,7 +12,7 @@ How to use parser on lines from logfile:
    or
    pa.key(lines) (to automatically determine program)
 
-Program: 
+Program:
    gaussian
    molpro
 Key:
@@ -26,7 +26,7 @@ Key:
 
 
 def get_prog(lines):
-   
+
    if 'Gaussian' in lines:
        return 'gaussian'
    elif 'molpro' in lines or 'MOLPRO' in lines:
@@ -46,7 +46,7 @@ def gaussian_islinear(s):
         return True
     else:
         return False
-    
+
 def gaussian_natom(s):
     """
     NAtoms=     30 NQM=       30 NQMF=       0 NMMI=      0 NMMIF=      0
@@ -70,7 +70,7 @@ def gaussian_nfreq(s):
         nvdof = 3*natom - 6
     return nvdof
 
-  
+
 def gaussian_basisset(lines):
 
     bas = 'Standard basis:\s*(\S*)'
@@ -121,10 +121,10 @@ def gaussian_energy(lines,method=''):
         energ = 'E\([u,U,r,R]*' + method + '\)\s*=\s*([\d,\-,\.,D,\+]*)'
         energ = re.findall(energ,lines)
         return (method, float(energ[-1].replace('D','E')))
-    return 
+    return
 
 def gaussian_opt_zmat_params(lines):
-    
+
     params = ''
     if not 'Optimized Parameters' in lines:
         return None
@@ -206,7 +206,7 @@ def gaussian_zpve(lines):
     zpve = re.findall(zpve, lines)
     if len(zpve) > 0:
         return float(zpve[-1])
-    return 0.0 
+    return 0.0
 
 def gaussian_anzpve(lines):
     """
@@ -222,7 +222,7 @@ def gaussian_anzpve(lines):
     if len(zpve) > 0:
         return float(zpve[-1].replace('D','E')) * rcm2au
     return
- 
+
 def gaussian_calc(lines):
     if 'Optimization complete' in lines:
         return 'geometry optimization'
@@ -251,8 +251,8 @@ def gaussian_xyz_foresk(lines):
         for i,line in enumerate(lines):
             line = line.split()
             xyz +=  atoms[i] + '  ' + line[3] + '  ' + line[4] + '  ' + line[5] + '\n'
-    return xyz 
-    
+    return xyz
+
 def gaussian_geo(lines):
     atomnum = {'1':'H','6':'C','7':'N','8':'O'}
     xyz = ''
@@ -272,9 +272,9 @@ def gaussian_geo(lines):
     except:
         logging.error('Cannot parse xyz')
     return xyz
-   
+
 def gaussian_xyz(lines):
-    geo = gaussian_geo(lines) 
+    geo = gaussian_geo(lines)
     if geo:
         n   = str(len(geo.splitlines()))
         xyz = n + '\n\n' +  geo
@@ -284,7 +284,7 @@ def gaussian_xyz(lines):
 
 def freq_xyz(lines):
     lines = lines.split('Optimized')[1].split('Z-Matrix orientation')[1].split('Distance matrix')[0]
-    geo = gaussian_geo(lines) 
+    geo = gaussian_geo(lines)
     if geo:
         n   = str(len(geo.splitlines()))
         xyz = n + '\n\n' +  geo
@@ -306,9 +306,9 @@ def gaussian_rotconstscent(lines):
     return constants
 
 def gaussian_rotconsts(lines):
-    rot = 'Rotational constants\s*\(GHZ\):\s*([\s,\d,\.,\-]*)'     
+    rot = 'Rotational constants\s*\(GHZ\):\s*([\s,\d,\.,\-]*)'
     rot = re.findall(rot,lines)
-    if len(rot) > 0: 
+    if len(rot) > 0:
         rot = rot[-1].split()
     ndof  = gaussian_nfreq(lines)
     if ndof < 2:
@@ -317,7 +317,7 @@ def gaussian_rotconsts(lines):
          if abs(float(rot[0])) < 0.000001:
              rot = rot[1:]
     return rot
- 
+
 def gaussian_rotdists (lines):
     startkey = 'Quartic Centrifugal Distortion Constants Tau Prime'
     endkey   = 'Asymmetric Top Reduction'
@@ -329,7 +329,7 @@ def gaussian_rotdists (lines):
     distlines = []
     for line in lines:
         splitline = line.split()
-        if splitline[0] == 'TauP': 
+        if splitline[0] == 'TauP':
            distlines.append('\t'.join(splitline[1:3]))
         else:
            break
@@ -351,7 +351,7 @@ def gaussian_vibrot(lines):
           lines[i] = '\t'.join(lines[i].split()[:-1])
     mat   = '\n'.join(lines).split('---------------')[0]
     return mat
-    
+
 ##############################################
 ############      MOLPRO PARSER    ###########
 ##############################################
@@ -370,7 +370,7 @@ def molpro_energy(lines,method=''):
         energ  = method + ' total energy\s*([\d,\-,\.]+)'
         energ  = re.findall(energ,lines)
         if len(energ) == 0:
-            energ  = '!\w*\-\s*[\U,\R]' + method + '\s*energy\s*([\d,\-,\.]+)'
+            energ  = '!\w*\-\s*[\\U,\R]' + method + '\s*energy\s*([\d,\-,\.]+)'
             energ  = re.findall(energ,lines)
             if len(energ) > 0:
                 return (method.rstrip('[a,b]?'), float(energ[-1].replace('\n','').replace(' ','')))
@@ -382,7 +382,7 @@ def molpro_energy(lines,method=''):
         energ = re.findall(energ,lines)
         if len(energ) > 0:
             return (method.rstrip('[a,b]?'), float(energ[-1].replace('\n','').replace(' ','')))
-    
+
     elif 'MP' in method:
         energ = ' ' + method + ' total energy:\s*([\w,\-,\.]+)'
         energ = re.findall(energ,lines)
@@ -398,10 +398,8 @@ def molpro_energy(lines,method=''):
             return (method.rstrip('[a,b]?'),float(energ[-1].replace('\n','').replace(' ','')))
     else:
         return (method.rstrip('[a,b]?'),float(energ[-1].replace('\n','').replace(' ','')))
-    if len(energ) == 0:
-        print 'energy not found'
-    return '', 0 
-   
+    return '', 0
+
 def  molpro_freqs(lines):
 
     freqs = 'Wavenumbers \[cm-1\]   (.+)'
@@ -410,7 +408,7 @@ def  molpro_freqs(lines):
     if freqlines == []:
         return []
     for line in freqlines:
-        if line.split()[0].strip() != '0.00': 
+        if line.split()[0].strip() != '0.00':
             freqs.extend(line.split())
     return freqs
 
@@ -474,18 +472,18 @@ def molpro_calc(lines):
 
 def molpro_basisset(lines):
 
-    basis  = 'basis=(\S*)' 
+    basis  = 'basis=(\S*)'
     basis  = re.findall(basis,lines)
     basis[-1] = basis[-1].replace('(d)','*')
     return basis[-1]
 
 def molpro_rotconsts(lines):
 
-    rot  = 'Rotational constants:\s*([\s,\d,\.,\-]*)' 
+    rot  = 'Rotational constants:\s*([\s,\d,\.,\-]*)'
     rot = re.findall(rot,lines)
     rot = rot[-1].split()
     return rot
- 
+
 def molpro_zmat(lines):
     geolines =  lines.split('geometry={')[1].split('}')[0].split('\n')[1:-1]
     zmat = 'geometry={angstrom \n' + '\n'.join(geolines) + '\n}\n'
@@ -541,22 +539,22 @@ def qchem_geo(lines):
             lines = lines.splitlines(True)[2:]
             for line in lines:
                 line = line.split()
-                xyz += ' ' + line[1] + '  ' + line[2] + '  ' + line[3] + '  ' + line[4] +'\n' 
+                xyz += ' ' + line[1] + '  ' + line[2] + '  ' + line[3] + '  ' + line[4] +'\n'
     except:
         logging.error('Cannot parse xyz')
     return xyz
 
 def qchem_xyz(lines):
-    geo = qchem_geo(lines) 
+    geo = qchem_geo(lines)
     if geo:
         n   = str(len(geo.splitlines()))
         xyz = n + '\n\n' +  geo
     else:
         xyz = ''
     return xyz
-   
+
 def qchem_energy(lines):
-    energy  = 'Final energy is\s*([\d,\.,-]*)' 
+    energy  = 'Final energy is\s*([\d,\.,-]*)'
     energy  = re.findall(energy,lines)
     if len(energy) < 1:
         energy  = 'energy in the final basis set =\s*([\d,\.,-]*)'
@@ -564,12 +562,12 @@ def qchem_energy(lines):
     return float(energy[-1])
 
 def qchem_method(lines):
-    method  = 'method\s*(\S*)' 
+    method  = 'method\s*(\S*)'
     method  = re.findall(method,lines)
     return  method[-1]
 
 def qchem_basisset(lines):
-    method  = 'Requested basis set is\s*(\S*)' 
+    method  = 'Requested basis set is\s*(\S*)'
     method  = re.findall(method,lines)
     return  method[-1].lower()
 
@@ -590,7 +588,7 @@ def qchem_zpve(lines):
     zpve = re.findall(zpve, lines)
     if len(zpve) > 0:
         return float(zpve[-1]) / ut.au2kcal
-    return 0.0 
+    return 0.0
 
 def qchem_calc(lines):
     if 'OPTIMIZATION COMPLETE' in lines:
@@ -603,20 +601,20 @@ def qchem_calc(lines):
 
 def EStokTP_freqs(lines):
     """
-    Pulls the frequencies out from EStokTP me output file 
+    Pulls the frequencies out from EStokTP me output file
     INPUT:
     lines -    lines from EStokTP output file (reac1_fr.me or reac1_unpfr.me)
     OUTPUT:
     freqs    - frequencies obtained from output file
     """
     import numpy as np
- 
+
     lines  = lines.strip('\n')
-    lines  = lines.split('[1/cm]')[1].split('Zero')[0] 
+    lines  = lines.split('[1/cm]')[1].split('Zero')[0]
     lines  = lines.split()
     nfreqs = lines[0]
     freqs  = lines[1:]
-    freqs  = np.array(map(float, freqs))
+    freqs  = np.array(list(map(float, freqs)))
     freqs  = np.sort(freqs)[::-1]
     return freqs.tolist()
 
@@ -630,7 +628,7 @@ def method(lines):
         return gaussian_method(lines)
     if prog == 'molpro':
         return molpro_method(lines)
-    print 'program not recognized as gaussian or molpro'
+    print('program not recognized as gaussian or molpro')
     return
 
 def basisset(lines):
@@ -639,7 +637,7 @@ def basisset(lines):
         return gaussian_basisset(lines)
     if prog == 'molpro':
         return molpro_basisset(lines)
-    print 'program not recognized as gaussian or molpro'
+    print('program not recognized as gaussian or molpro')
     return
 
 def energy(lines):
@@ -648,7 +646,7 @@ def energy(lines):
         return gaussian_energy(lines)
     if prog == 'molpro':
         return molpro_energy(lines)
-    print 'program not recognized as gaussian or molpro'
+    print('program not recognized as gaussian or molpro')
     return
 
 def zmat(lines):
@@ -657,7 +655,7 @@ def zmat(lines):
         return gaussian_zmat(lines)
     if prog == 'molpro':
         return molpro_zmat(lines)
-    print 'program not recognized as gaussian or molpro'
+    print('program not recognized as gaussian or molpro')
     return
 
 def freqs(lines):
@@ -666,7 +664,7 @@ def freqs(lines):
         return gaussian_freqs(lines)
     if prog == 'molpro':
         return molpro_freqs(lines)
-    print 'program not recognized as gaussian or molpro'
+    print('program not recognized as gaussian or molpro')
     return
 
 def zpve(lines):
@@ -686,8 +684,8 @@ def anzpve(lines):
         return gaussian_anzpve(lines)
     if prog == 'molpro':
        return #molpro_anzpve(lines)
-    print 'program not recognized as gaussian or molpro'
-    return 
+    print('program not recognized as gaussian or molpro')
+    return
 
 def xyz(lines):
     prog = get_prog(lines)
@@ -695,7 +693,7 @@ def xyz(lines):
         return gaussian_xyz(lines)
     if prog == 'molpro':
         return molpro_xyz(lines)
-    print 'program not recognized as gaussian or molpro'
+    print('program not recognized as gaussian or molpro')
     return
 
 def geo(lines):
@@ -704,7 +702,7 @@ def geo(lines):
         return gaussian_geo(lines)
     if prog == 'molpro':
         return molpro_geo(lines)
-    print 'program not recognized as gaussian or molpro'
+    print('program not recognized as gaussian or molpro')
     return
 
 def rotconsts(lines):
@@ -713,7 +711,7 @@ def rotconsts(lines):
         return gaussian_rotconsts(lines)
     if prog == 'molpro':
         return molpro_rotconsts(lines)
-    print 'program not recognized as gaussian or molpro'
+    print('program not recognized as gaussian or molpro')
     return
 
 def get_298(lines):
@@ -724,5 +722,5 @@ def get_298(lines):
         if 'h298 final' in line:
             tmp = float(line.split()[-1])
     return tmp
-    
- 
+
+
