@@ -61,5 +61,5 @@ if __name__ == '__main__':
             ('H', (0.54568, -0.01805, -0.90370)),
             ('H', (0.53167, 0.14904, 0.94292)),
             ('H', (2.97493, -0.03212, -0.93001)))
-    print(adjacency_matrix(MGEO))
-    print(radical_sites(MGEO))
+    print((adjacency_matrix(MGEO)))
+    print((radical_sites(MGEO)))
