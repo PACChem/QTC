@@ -28,13 +28,13 @@ source activate qtc-env
 ## Run QTC
 To run a series of quantum chemistry calculations for a water molecule (SMILES for H2O is O) with different packages
 ```
-python src/qtc.py -i O -k "opt/mp2/dz/gaussian,freq/ccsd/dz/molpro,energy/ccsd(t)/adz/nwhcem" -Q
+python src/qtc.py -i O -k "opt/mp2/dz/gaussian,freq/ccsd/dz/molpro,energy/ccsd(t)/adz/nwchem" -Q
 ```
 To run thermochemistry calculations at the end, add `-T`
 ```
-python src/qtc.py -i O -k 'opt/mp2/dz/gaussian,freq/ccsd/dz/molpro,energy/ccsd(t)/adz/nwhcem' -Q -T
+python src/qtc.py -i O -k 'opt/mp2/dz/gaussian,freq/ccsd/dz/molpro,energy/ccsd(t)/adz/nwchem' -Q -T
 ```
 If you add -J, QTC generates a JSON file containing all the results
 ```
-python src/qtc.py -i O -k 'opt/mp2/dz/gaussian,freq/ccsd/dz/molpro,energy/ccsd(t)/adz/nwhcem' -Q -T -J
+python src/qtc.py -i O -k 'opt/mp2/dz/gaussian,freq/ccsd/dz/molpro,energy/ccsd(t)/adz/nwchem' -Q -T -J
 ```
